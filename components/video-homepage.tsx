@@ -4,8 +4,6 @@ import { useEffect, useState, useRef } from "react"
 import { Video } from "@/lib/db"
 import { VideoPlayer } from "@/components/video-player"
 import { Play, Calendar, Bug, X, AlertCircle } from "lucide-react"
-import { IntroLanding } from "@/components/intro-landing"
-import { MainMenu } from "@/components/main-menu"
 
 interface DebugLog {
   timestamp: string
@@ -22,9 +20,6 @@ export function VideoHomepage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showDebug, setShowDebug] = useState(false)
   const [debugLogs, setDebugLogs] = useState<DebugLog[]>([])
-  const [introVideo, setIntroVideo] = useState<Video | null>(null)
-  const [showIntro, setShowIntro] = useState(true)
-  const [showMenu, setShowMenu] = useState(false)
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map())
 
   const addDebugLog = (type: DebugLog["type"], message: string, data?: any) => {
@@ -39,29 +34,10 @@ export function VideoHomepage() {
   }
 
   useEffect(() => {
-    addDebugLog("info", "Component mounted, fetching intro video and videos...")
-    fetchIntroVideo()
+    addDebugLog("info", "Component mounted, fetching videos...")
+    // Skip intro/menu logic - go straight to video grid
     fetchVideos()
   }, [])
-
-  const fetchIntroVideo = async () => {
-    try {
-      const response = await fetch("/api/intro-video")
-      const data = await response.json()
-      if (data.video) {
-        addDebugLog("success", "Intro video found", { id: data.video.id, title: data.video.title })
-        setIntroVideo(data.video)
-      } else {
-        addDebugLog("warning", "No intro video found, skipping intro")
-        setShowIntro(false)
-        setShowMenu(true)
-      }
-    } catch (error) {
-      addDebugLog("error", "Error fetching intro video", { error })
-      setShowIntro(false)
-      setShowMenu(true)
-    }
-  }
 
   const fetchVideos = async (category?: string) => {
     try {
@@ -104,24 +80,16 @@ export function VideoHomepage() {
     }
   }
 
-  const handleIntroComplete = () => {
-    addDebugLog("info", "Intro video completed, showing menu")
-    setShowIntro(false)
-    setShowMenu(true)
-  }
-
   const handleCategoryClick = (category: string) => {
     addDebugLog("info", "Category clicked", { category })
     setSelectedCategory(category)
     fetchVideos(category)
-    setShowMenu(false) // Hide menu, show video grid
   }
 
   const handleAllVideosClick = () => {
     addDebugLog("info", "All videos clicked")
     setSelectedCategory(null)
     fetchVideos()
-    setShowMenu(false) // Hide menu, show video grid
   }
 
   const handleVideoClick = async (video: Video) => {
@@ -200,161 +168,7 @@ export function VideoHomepage() {
 
   const categories = Array.from(new Set(videos.map(v => v.category).filter(Boolean)))
 
-  // Show intro landing if intro video exists and hasn't been completed
-  if (showIntro && introVideo) {
-    return (
-      <>
-        <IntroLanding 
-          introVideo={introVideo} 
-          onIntroComplete={handleIntroComplete}
-        />
-        {/* Debug Panel */}
-        {showDebug && (
-          <div className="fixed bottom-4 right-4 w-96 h-96 bg-black/95 border border-gray-700 rounded-lg shadow-2xl z-[100] flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b border-gray-700">
-              <h3 className="font-bold text-sm flex items-center gap-2">
-                <Bug className="w-4 h-4" />
-                Debug Monitor
-              </h3>
-              <button
-                onClick={() => setShowDebug(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-1 font-mono text-xs">
-              {debugLogs.map((log, idx) => (
-                <div
-                  key={idx}
-                  className={`p-2 rounded border-l-2 ${
-                    log.type === "error"
-                      ? "bg-red-900/20 border-red-500 text-red-300"
-                      : log.type === "warning"
-                      ? "bg-yellow-900/20 border-yellow-500 text-yellow-300"
-                      : log.type === "success"
-                      ? "bg-green-900/20 border-green-500 text-green-300"
-                      : "bg-gray-900/20 border-gray-500 text-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-gray-500 text-[10px]">{log.timestamp}</span>
-                    <span className="font-bold uppercase text-[10px]">{log.type}</span>
-                  </div>
-                  <div className="text-xs">{log.message}</div>
-                  {log.data && (
-                    <details className="mt-1">
-                      <summary className="cursor-pointer text-gray-400 text-[10px]">Details</summary>
-                      <pre className="mt-1 text-[10px] overflow-x-auto">
-                        {JSON.stringify(log.data, null, 2)}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="p-2 border-t border-gray-700 flex gap-2">
-              <button
-                onClick={() => setDebugLogs([])}
-                className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded"
-              >
-                Clear
-              </button>
-              <div className="flex-1 text-xs text-gray-400 flex items-center justify-end">
-                {debugLogs.length} logs
-              </div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setShowDebug(!showDebug)}
-          className="fixed bottom-4 right-4 z-50 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg flex items-center gap-2 text-sm"
-        >
-          <Bug className="w-4 h-4" />
-          Debug
-        </button>
-      </>
-    )
-  }
-
-  // Show main menu after intro
-  if (showMenu && !selectedCategory) {
-    return (
-      <>
-        <MainMenu 
-          onCategoryClick={handleCategoryClick}
-          onAllVideosClick={handleAllVideosClick}
-        />
-        {/* Debug Panel */}
-        {showDebug && (
-          <div className="fixed bottom-4 right-4 w-96 h-96 bg-black/95 border border-gray-700 rounded-lg shadow-2xl z-[100] flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b border-gray-700">
-              <h3 className="font-bold text-sm flex items-center gap-2">
-                <Bug className="w-4 h-4" />
-                Debug Monitor
-              </h3>
-              <button
-                onClick={() => setShowDebug(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-1 font-mono text-xs">
-              {debugLogs.map((log, idx) => (
-                <div
-                  key={idx}
-                  className={`p-2 rounded border-l-2 ${
-                    log.type === "error"
-                      ? "bg-red-900/20 border-red-500 text-red-300"
-                      : log.type === "warning"
-                      ? "bg-yellow-900/20 border-yellow-500 text-yellow-300"
-                      : log.type === "success"
-                      ? "bg-green-900/20 border-green-500 text-green-300"
-                      : "bg-gray-900/20 border-gray-500 text-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-gray-500 text-[10px]">{log.timestamp}</span>
-                    <span className="font-bold uppercase text-[10px]">{log.type}</span>
-                  </div>
-                  <div className="text-xs">{log.message}</div>
-                  {log.data && (
-                    <details className="mt-1">
-                      <summary className="cursor-pointer text-gray-400 text-[10px]">Details</summary>
-                      <pre className="mt-1 text-[10px] overflow-x-auto">
-                        {JSON.stringify(log.data, null, 2)}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="p-2 border-t border-gray-700 flex gap-2">
-              <button
-                onClick={() => setDebugLogs([])}
-                className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded"
-              >
-                Clear
-              </button>
-              <div className="flex-1 text-xs text-gray-400 flex items-center justify-end">
-                {debugLogs.length} logs
-              </div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setShowDebug(!showDebug)}
-          className="fixed bottom-4 right-4 z-50 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg flex items-center gap-2 text-sm"
-        >
-          <Bug className="w-4 h-4" />
-          Debug
-        </button>
-      </>
-    )
-  }
-
-  // Show video grid when category is selected
+  // Show video grid directly (skip intro/menu logic)
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white relative">
       {/* Debug Panel Toggle */}
@@ -435,15 +249,12 @@ export function VideoHomepage() {
       <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#272727] px-4 md:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
           <div className="flex items-center gap-6">
-            <button
-              onClick={() => {
-                setSelectedCategory(null)
-                setShowMenu(true)
-              }}
+            <a
+              href="/"
               className="text-xl font-bold hover:opacity-70 transition-opacity"
             >
               CIRCUS17
-            </button>
+            </a>
             <nav className="hidden md:flex items-center gap-4">
               <button
                 onClick={handleAllVideosClick}

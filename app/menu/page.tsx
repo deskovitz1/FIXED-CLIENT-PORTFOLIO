@@ -1,6 +1,6 @@
-"use client"
+// app/menu/page.tsx
 
-import Link from "next/link"
+import Link from "next/link";
 
 function MenuButton({ label, href }: { label: string; href: string }) {
   return (
@@ -10,22 +10,26 @@ function MenuButton({ label, href }: { label: string; href: string }) {
     >
       {label}
     </Link>
-  )
+  );
 }
 
 export default function MainMenuPage() {
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-8">
-      <h1 className="text-3xl font-semibold tracking-[0.3em]">
-        CIRCUS17
-      </h1>
+      <h1 className="text-3xl font-semibold tracking-[0.3em]">CIRCUS17</h1>
       <div className="flex flex-wrap justify-center gap-4">
-        <MenuButton label="Recent Videos" href="/videos?category=recent-work" />
-        <MenuButton label="Launch Videos" href="/videos?category=industry-work" />
-        <MenuButton label="Music" href="/videos?category=music-video" />
-        <MenuButton label="Clothing" href="/videos?category=clothing" />
-        <MenuButton label="Narrative" href="/videos?category=narrative" />
+        {/*
+          IMPORTANT:
+          Replace "/videos" below with the REAL route where your actual videos page exists.
+          If your working page is /videos, keep it.
+          If it is something else (like /circus, /portfolio, /allvideos), change it.
+        */}
+        <MenuButton label="Recent Videos" href="/videos" />
+        <MenuButton label="Launch Videos" href="/videos" />
+        <MenuButton label="Music" href="/videos" />
+        <MenuButton label="Clothing" href="/videos" />
+        <MenuButton label="Narrative" href="/videos" />
       </div>
     </main>
-  )
+  );
 }
