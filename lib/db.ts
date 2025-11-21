@@ -15,8 +15,9 @@ export interface Video {
   updated_at: string;
 }
 
-// Intro video filename - excluded from regular video listings
-const INTRO_VIDEO_FILENAME = "door_flies_open_and_we_DOLLY_ZOOM_FAST_into_that_door_into_the_theatre_and_delete_the_sign_in_the_th.mp4"
+// Intro video URL and filename - excluded from regular video listings
+const INTRO_VIDEO_URL = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/smaller%20intro%20video-2OLEoXDlOrPov0XwuKOqHmFHls7C3P.mp4"
+const INTRO_VIDEO_FILENAME = "smaller intro video"
 
 export async function getVideos(category?: string, excludeIntro: boolean = true): Promise<Video[]> {
   try {
@@ -26,13 +27,31 @@ export async function getVideos(category?: string, excludeIntro: boolean = true)
       whereClause.category = category
     }
     
-    // Exclude intro video from regular listings
+    // Exclude intro video from regular listings (by filename or URL)
     if (excludeIntro) {
-      whereClause.file_name = {
-        not: {
-          contains: INTRO_VIDEO_FILENAME,
+      whereClause.AND = [
+        {
+          file_name: {
+            not: {
+              contains: INTRO_VIDEO_FILENAME,
+            },
+          },
         },
-      }
+        {
+          blob_url: {
+            not: {
+              contains: INTRO_VIDEO_URL,
+            },
+          },
+        },
+        {
+          video_url: {
+            not: {
+              contains: INTRO_VIDEO_URL,
+            },
+          },
+        },
+      ]
     }
     
     const videos = await prisma.video.findMany({
