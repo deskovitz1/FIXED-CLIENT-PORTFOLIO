@@ -75,7 +75,20 @@ export default function AdminPage() {
         throw new Error(error.error || "Upload failed")
       }
 
-      toast.success("Video uploaded successfully")
+      const result = await response.json()
+      const blobUrl = result.video?.blob_url || result.video?.video_url
+      
+      if (blobUrl) {
+        // Copy URL to clipboard
+        navigator.clipboard.writeText(blobUrl).then(() => {
+          toast.success(`Video uploaded! Blob URL copied to clipboard: ${blobUrl.substring(0, 50)}...`)
+        }).catch(() => {
+          toast.success(`Video uploaded! Blob URL: ${blobUrl}`)
+        })
+        console.log("Blob URL:", blobUrl)
+      } else {
+        toast.success("Video uploaded successfully")
+      }
       setFormData({
         title: "",
         description: "",
