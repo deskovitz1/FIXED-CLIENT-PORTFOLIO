@@ -31,7 +31,22 @@ export function VideoHomepage() {
       video.currentTime = 0
       video.pause()
       setIsLoaded(true)
-      console.log("✅ Video loaded, frozen on first frame")
+      console.log("✅ Video loaded, frozen on first frame", {
+        duration: video.duration,
+        readyState: video.readyState,
+        networkState: video.networkState,
+      })
+    }
+
+    const handleLoadedData = () => {
+      console.log("✅ Video data loaded", {
+        duration: video.duration,
+        readyState: video.readyState,
+      })
+    }
+
+    const handleCanPlay = () => {
+      console.log("✅ Video can play")
     }
 
     const handleTimeUpdate = () => {
@@ -48,23 +63,41 @@ export function VideoHomepage() {
       }
     }
 
+    const handlePlay = () => {
+      console.log("▶️ Video started playing")
+    }
+
+    const handlePause = () => {
+      console.log("⏸️ Video paused")
+    }
+
     const handleError = (e: Event) => {
       const video = e.target as HTMLVideoElement
       console.error("❌ Video error:", {
         error: video.error,
         code: video.error?.code,
         message: video.error?.message,
+        networkState: video.networkState,
+        readyState: video.readyState,
         src: video.src,
       })
     }
 
     video.addEventListener("loadedmetadata", handleLoadedMetadata)
+    video.addEventListener("loadeddata", handleLoadedData)
+    video.addEventListener("canplay", handleCanPlay)
     video.addEventListener("timeupdate", handleTimeUpdate)
+    video.addEventListener("play", handlePlay)
+    video.addEventListener("pause", handlePause)
     video.addEventListener("error", handleError)
 
     return () => {
       video.removeEventListener("loadedmetadata", handleLoadedMetadata)
+      video.removeEventListener("loadeddata", handleLoadedData)
+      video.removeEventListener("canplay", handleCanPlay)
       video.removeEventListener("timeupdate", handleTimeUpdate)
+      video.removeEventListener("play", handlePlay)
+      video.removeEventListener("pause", handlePause)
       video.removeEventListener("error", handleError)
     }
   }, [videoState])
@@ -100,14 +133,69 @@ export function VideoHomepage() {
 
   const handlePlayVideo = async () => {
     const video = videoRef.current
-    if (!video || videoState !== "frozen") return
+    if (!video) {
+      console.error("❌ Video ref is null")
+      return
+    }
+
+    if (videoState !== "frozen") {
+      console.log("⚠️ Video not in frozen state, current state:", videoState)
+      return
+    }
+
+    console.log("🎬 Attempting to play video...", {
+      readyState: video.readyState,
+      networkState: video.networkState,
+      paused: video.paused,
+      currentTime: video.currentTime,
+      duration: video.duration,
+    })
 
     try {
+      // Ensure video is at the start
+      if (video.currentTime !== 0) {
+        video.currentTime = 0
+      }
+
+      // Wait for video to be ready if needed
+      if (video.readyState < 2) {
+        console.log("⏳ Waiting for video to be ready...")
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("Video load timeout"))
+          }, 10000)
+          
+          const onCanPlay = () => {
+            clearTimeout(timeout)
+            video.removeEventListener("canplay", onCanPlay)
+            video.removeEventListener("error", onError)
+            resolve(undefined)
+          }
+          
+          const onError = () => {
+            clearTimeout(timeout)
+            video.removeEventListener("canplay", onCanPlay)
+            video.removeEventListener("error", onError)
+            reject(new Error("Video load error"))
+          }
+          
+          video.addEventListener("canplay", onCanPlay, { once: true })
+          video.addEventListener("error", onError, { once: true })
+        })
+      }
+
       setVideoState("playing")
       await video.play()
-      console.log("✅ Video playing")
+      console.log("✅ Video play() succeeded")
     } catch (error) {
       console.error("❌ Video playback failed:", error)
+      console.error("Video error details:", {
+        error: video.error,
+        code: video.error?.code,
+        message: video.error?.message,
+        networkState: video.networkState,
+        readyState: video.readyState,
+      })
       setVideoState("frozen")
     }
   }
@@ -158,20 +246,31 @@ export function VideoHomepage() {
           filter: `blur(${blurAmount}px)`,
           transform: blurAmount > 0 ? "scale(1.05)" : "scale(1)",
         }}
-        preload="metadata"
+        preload="auto"
         playsInline
         muted
+        onLoadedMetadata={() => {
+          const video = videoRef.current
+          if (video) {
+            video.currentTime = 0
+            video.pause()
+            console.log("📹 Video metadata loaded, frozen at start")
+          }
+        }}
         onError={(e) => {
           const video = e.currentTarget
-          console.error("Video element error:", {
+          console.error("❌ Video element error:", {
             error: video.error,
             code: video.error?.code,
             message: video.error?.message,
+            networkState: video.networkState,
+            readyState: video.readyState,
             src: video.src,
           })
         }}
       >
         <source src={INTRO_VIDEO_URL} type="video/mp4" />
+        Your browser does not support the video tag.
       </video>
 
       {/* Click to Enter Overlay - Only shown when frozen */}
