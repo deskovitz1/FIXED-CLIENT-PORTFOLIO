@@ -1,77 +1,53 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import ReactPlayer from "react-player"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Video } from "@/lib/db"
 
 interface VideoPlayerProps {
-  videoUrl: string
-  title: string
+  video?: Video
+  videoUrl?: string
+  title?: string
   isOpen: boolean
   onClose: () => void
 }
 
-export function VideoPlayer({ videoUrl, title, isOpen, onClose }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isReady, setIsReady] = useState(false)
-  const playerRef = useRef<ReactPlayer>(null)
-  const mountedRef = useRef(true)
-
-  useEffect(() => {
-    console.log("VideoPlayer mounted/updated", { videoUrl, isOpen })
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-    }
-  }, [videoUrl, isOpen])
-
-  useEffect(() => {
-    if (isOpen && mountedRef.current) {
-      console.log("Modal opened, resetting ready state")
-      setIsReady(false)
-      setIsPlaying(false)
-      // Wait a bit for the player to mount before trying to play
-      const timer = setTimeout(() => {
-        if (mountedRef.current && isReady) {
-          console.log("Setting playing to true after ready")
-          setIsPlaying(true)
-        }
-      }, 100)
-      return () => clearTimeout(timer)
-    } else {
-      setIsPlaying(false)
-      setIsReady(false)
-    }
-  }, [isOpen, isReady])
-
-  const handleReady = () => {
-    console.log("ReactPlayer ready", { videoUrl })
-    if (mountedRef.current) {
-      setIsReady(true)
-      // Start playing after a short delay to ensure player is ready
-      setTimeout(() => {
-        if (mountedRef.current) {
-          console.log("Starting playback")
-          setIsPlaying(true)
-        }
-      }, 200)
-    }
-  }
-
-  const handleError = (error: any) => {
-    console.error("Video playback error:", error, { videoUrl })
-    // Don't try to play if there's an error
-    setIsPlaying(false)
-  }
-
-  const handleStart = () => {
-    console.log("Video started playing")
-  }
+export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPlayerProps) {
+  // Get URL using the same logic as the hover preview
+  // If video object is passed, use video.video_url || video.blob_url
+  // If only videoUrl string is passed, use that
+  const url = video 
+    ? (video.video_url || video.blob_url || "")
+    : (videoUrl || "")
 
   if (!isOpen) return null
 
-  console.log("Rendering VideoPlayer", { videoUrl, isOpen, isReady, isPlaying })
+  if (!url) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+        <div className="relative w-full max-w-7xl aspect-video bg-black flex items-center justify-center">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <div className="text-red-500 p-4 text-center">
+            <p className="text-lg mb-2">No video URL available for this video.</p>
+            {video && (
+              <p className="text-sm text-gray-400">
+                video.video_url: {video.video_url || "null"}
+                <br />
+                video.blob_url: {video.blob_url || "null"}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
@@ -85,37 +61,34 @@ export function VideoPlayer({ videoUrl, title, isOpen, onClose }: VideoPlayerPro
           <X className="h-6 w-6" />
         </Button>
         
-        <div className="w-full h-full">
-          {videoUrl ? (
-            <ReactPlayer
-              ref={playerRef}
-              url={videoUrl}
-              playing={isPlaying}
-              controls
-              width="100%"
-              height="100%"
-              onReady={handleReady}
-              onStart={handleStart}
-              onError={handleError}
-              config={{
-                file: {
-                  attributes: {
-                    controlsList: "nodownload",
-                    preload: "auto",
-                  },
-                  forceVideo: true,
-                },
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-red-900/20 border-2 border-red-500">
-              <div className="text-center">
-                <p className="text-red-400 mb-2">No video URL provided</p>
-                <p className="text-red-500 text-sm">videoUrl: {String(videoUrl)}</p>
-              </div>
-            </div>
-          )}
-        </div>
+        <video
+          src={url}
+          controls
+          autoPlay
+          playsInline
+          className="w-full h-full"
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          onError={(e) => {
+            const video = e.currentTarget
+            console.error("Video playback error:", {
+              error: video.error,
+              code: video.error?.code,
+              message: video.error?.message,
+              networkState: video.networkState,
+              readyState: video.readyState,
+              src: video.src,
+            })
+          }}
+          onLoadedMetadata={() => {
+            console.log("Video metadata loaded in modal", { url })
+          }}
+          onCanPlay={() => {
+            console.log("Video can play in modal", { url })
+          }}
+          onPlay={() => {
+            console.log("Video started playing in modal", { url })
+          }}
+        />
         
         {title && (
           <div className="absolute bottom-4 left-4 right-4">
@@ -126,4 +99,3 @@ export function VideoPlayer({ videoUrl, title, isOpen, onClose }: VideoPlayerPro
     </div>
   )
 }
-

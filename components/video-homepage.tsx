@@ -450,7 +450,7 @@ export function VideoHomepage() {
       {/* Video Player Modal */}
       {selectedVideo && (
         <VideoPlayer
-          videoUrl={selectedVideo.video_url || selectedVideo.blob_url}
+          video={selectedVideo}
           title={selectedVideo.title}
           isOpen={isPlayerOpen}
           onClose={() => {
