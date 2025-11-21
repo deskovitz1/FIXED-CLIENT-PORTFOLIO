@@ -23,35 +23,45 @@ export async function getVideos(category?: string, excludeIntro: boolean = true)
   try {
     const whereClause: any = {}
     
+    // Build AND conditions array
+    const conditions: any[] = []
+    
     if (category) {
-      whereClause.category = category
+      conditions.push({ category })
     }
     
     // Exclude intro video from regular listings (by filename or URL)
     if (excludeIntro) {
-      whereClause.AND = [
-        {
-          file_name: {
-            not: {
-              contains: INTRO_VIDEO_FILENAME,
+      conditions.push({
+        AND: [
+          {
+            file_name: {
+              not: {
+                contains: INTRO_VIDEO_FILENAME,
+              },
             },
           },
-        },
-        {
-          blob_url: {
-            not: {
-              contains: INTRO_VIDEO_URL,
+          {
+            blob_url: {
+              not: {
+                contains: INTRO_VIDEO_URL,
+              },
             },
           },
-        },
-        {
-          video_url: {
-            not: {
-              contains: INTRO_VIDEO_URL,
+          {
+            video_url: {
+              not: {
+                contains: INTRO_VIDEO_URL,
+              },
             },
           },
-        },
-      ]
+        ],
+      })
+    }
+    
+    // Only use AND if we have multiple conditions
+    if (conditions.length > 0) {
+      whereClause.AND = conditions
     }
     
     const videos = await prisma.video.findMany({
