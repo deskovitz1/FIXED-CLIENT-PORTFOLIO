@@ -4,49 +4,48 @@ import { useEffect, useRef, useState } from "react"
 import { Video } from "@/lib/db"
 import { VideoPlayer } from "@/components/video-player"
 
+const INTRO_VIDEO_URL = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4"
+
 export function VideoHomepage() {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const splashVideoRef = useRef<HTMLVideoElement>(null)
-  const hoverVideoRef = useRef<HTMLVideoElement>(null)
-  const transitionVideoRef = useRef<HTMLVideoElement>(null)
-  const [videoState, setVideoState] = useState<"initial" | "playing" | "ended">("initial")
+  const [videoState, setVideoState] = useState<"frozen" | "playing" | "blurring" | "ended">("frozen")
   const [isLoaded, setIsLoaded] = useState(false)
-  const [splashComplete, setSplashComplete] = useState(false)
-  const [showingRecentWork, setShowingRecentWork] = useState(false)
-  const [recentWorkEnded, setRecentWorkEnded] = useState(false)
-  const [isReversing, setIsReversing] = useState(false)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const [isHoveringEnterSign, setIsHoveringEnterSign] = useState(false)
-  const [isCinematicTransition, setIsCinematicTransition] = useState(false)
-  const [transitionBlur, setTransitionBlur] = useState(16)
-  const [buttonsOpacity, setButtonsOpacity] = useState(1)
+  const [blurAmount, setBlurAmount] = useState(0)
+  const [buttonsOpacity, setButtonsOpacity] = useState(0)
   const [videos, setVideos] = useState<Video[]>([])
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [hasTriggeredEarlyEnd, setHasTriggeredEarlyEnd] = useState(false)
+  const [showingRecentWork, setShowingRecentWork] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
+    // Set video source
+    video.src = INTRO_VIDEO_URL
     video.load()
 
-    const handleLoadedData = () => {
+    const handleLoadedMetadata = () => {
+      // Freeze on first frame
+      video.currentTime = 0
+      video.pause()
       setIsLoaded(true)
-      console.log("✅ Video loaded successfully", {
-        readyState: video.readyState,
-        networkState: video.networkState,
-        duration: video.duration,
-        src: video.src,
-      })
+      console.log("✅ Video loaded, frozen on first frame")
     }
-    
-    const handleCanPlay = () => {
-      console.log("✅ Video can play", {
-        readyState: video.readyState,
-        duration: video.duration,
-      })
+
+    const handleTimeUpdate = () => {
+      if (videoState !== "playing") return
+
+      // Detect when door opens - adjust this time based on your video
+      // You may need to fine-tune this value by watching the video
+      const doorOpenTime = 8 // seconds - adjust this to match when door opens in your video
+      
+      if (video.currentTime >= doorOpenTime && videoState === "playing") {
+        // Start blurring transition
+        setVideoState("blurring")
+        startBlurTransition()
+      }
     }
 
     const handleError = (e: Event) => {
@@ -55,148 +54,63 @@ export function VideoHomepage() {
         error: video.error,
         code: video.error?.code,
         message: video.error?.message,
-        networkState: video.networkState,
-        readyState: video.readyState,
         src: video.src,
       })
     }
 
-    const handleEnded = () => {
-      if (showingRecentWork) {
-        setRecentWorkEnded(true)
-      } else {
-        setVideoState("ended")
-      }
-    }
-
-    const handleTimeUpdate = () => {
-      if (isReversing && video.currentTime <= 3) {
-        video.pause()
-        setIsReversing(false)
-        setShowingRecentWork(false)
-        setRecentWorkEnded(false)
-        setHasTriggeredEarlyEnd(false)
-        video.src = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4"
-        video.load()
-        video.addEventListener(
-          "loadeddata",
-          () => {
-            video.currentTime = video.duration
-            setVideoState("ended")
-          },
-          { once: true },
-        )
-        return
-      }
-
-      // Cut video 3 seconds early for initial intro video
-      // Only trigger if: not showing recent work, video is playing, duration is loaded, we haven't already triggered, and we're within 3 seconds of the end
-      if (!showingRecentWork && videoState === "playing" && !hasTriggeredEarlyEnd && video.duration > 0 && isFinite(video.duration) && video.currentTime > 1 && video.duration - video.currentTime <= 3 && video.duration - video.currentTime > 0) {
-        video.pause()
-        setVideoState("ended")
-        setHasTriggeredEarlyEnd(true)
-        return
-      }
-
-      if (showingRecentWork && !isReversing && video.duration > 0 && video.duration - video.currentTime <= 3) {
-        video.pause()
-        setRecentWorkEnded(true)
-      }
-    }
-
-    video.addEventListener("loadeddata", handleLoadedData)
-    video.addEventListener("canplay", handleCanPlay)
-    video.addEventListener("error", handleError)
-    video.addEventListener("ended", handleEnded)
+    video.addEventListener("loadedmetadata", handleLoadedMetadata)
     video.addEventListener("timeupdate", handleTimeUpdate)
+    video.addEventListener("error", handleError)
 
     return () => {
-      video.removeEventListener("loadeddata", handleLoadedData)
-      video.removeEventListener("canplay", handleCanPlay)
-      video.removeEventListener("error", handleError)
-      video.removeEventListener("ended", handleEnded)
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata)
       video.removeEventListener("timeupdate", handleTimeUpdate)
+      video.removeEventListener("error", handleError)
     }
-  }, [showingRecentWork, isReversing, videoState, hasTriggeredEarlyEnd])
+  }, [videoState])
 
-  useEffect(() => {
-    const splashVideo = splashVideoRef.current
-    if (!splashVideo) return
+  const startBlurTransition = () => {
+    // Gradually blur and fade in buttons over 1.5 seconds
+    const duration = 1500 // ms
+    const startTime = Date.now()
+    const startBlur = 0
+    const endBlur = 20
 
-    const handleSplashLoadedMetadata = () => {
-      splashVideo.currentTime = 1
-    }
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
 
-    const handleSplashTimeUpdate = () => {
-      if (splashVideo.duration - splashVideo.currentTime <= 2) {
-        setSplashComplete(true)
-      }
-    }
+      // Ease out cubic for smooth transition
+      const eased = 1 - Math.pow(1 - progress, 3)
 
-    const handleSplashEnded = () => {
-      setSplashComplete(true)
-    }
+      setBlurAmount(startBlur + (endBlur - startBlur) * eased)
+      setButtonsOpacity(eased)
 
-    splashVideo.addEventListener("loadedmetadata", handleSplashLoadedMetadata)
-    splashVideo.addEventListener("timeupdate", handleSplashTimeUpdate)
-    splashVideo.addEventListener("ended", handleSplashEnded)
-
-    return () => {
-      splashVideo.removeEventListener("loadedmetadata", handleSplashLoadedMetadata)
-      splashVideo.removeEventListener("timeupdate", handleSplashTimeUpdate)
-      splashVideo.removeEventListener("ended", handleSplashEnded)
-    }
-  }, [])
-
-  useEffect(() => {
-    const hoverVideo = hoverVideoRef.current
-    if (!hoverVideo) return
-
-    if (isHoveringEnterSign) {
-      hoverVideo.currentTime = 0
-      hoverVideo.play().catch((error) => {
-        console.error("Hover video playback failed:", error)
-      })
-    } else {
-      hoverVideo.pause()
-      hoverVideo.currentTime = 0
-    }
-  }, [isHoveringEnterSign])
-
-  useEffect(() => {
-    const transitionVideo = transitionVideoRef.current
-    if (!transitionVideo) return
-
-    const handleTransitionTimeUpdate = () => {
-      if (!isCinematicTransition) return
-
-      const progress = transitionVideo.currentTime / transitionVideo.duration
-
-      // Gradually reduce blur from 16px to 0 over the video duration
-      setTransitionBlur(16 * (1 - progress))
-
-      // Fade out buttons in the first 30% of the video
-      if (progress < 0.3) {
-        setButtonsOpacity(1 - progress / 0.3)
+      if (progress < 1) {
+        requestAnimationFrame(animate)
       } else {
-        setButtonsOpacity(0)
+        setVideoState("ended")
+        setBlurAmount(endBlur)
+        setButtonsOpacity(1)
       }
     }
 
-    const handleTransitionEnded = () => {
-      setIsCinematicTransition(false)
-      setShowingRecentWork(true)
-      setRecentWorkEnded(true)
-    }
+    animate()
+  }
 
-    transitionVideo.addEventListener("timeupdate", handleTransitionTimeUpdate)
-    transitionVideo.addEventListener("ended", handleTransitionEnded)
+  const handlePlayVideo = async () => {
+    const video = videoRef.current
+    if (!video || videoState !== "frozen") return
 
-    return () => {
-      transitionVideo.removeEventListener("timeupdate", handleTransitionTimeUpdate)
-      transitionVideo.removeEventListener("ended", handleTransitionEnded)
+    try {
+      setVideoState("playing")
+      await video.play()
+      console.log("✅ Video playing")
+    } catch (error) {
+      console.error("❌ Video playback failed:", error)
+      setVideoState("frozen")
     }
-  }, [isCinematicTransition])
+  }
 
   const fetchVideos = async (category?: string) => {
     try {
@@ -212,34 +126,14 @@ export function VideoHomepage() {
   }
 
   const handleRecentWorkClick = async () => {
-    const transitionVideo = transitionVideoRef.current
-    if (!transitionVideo || isTransitioning) return
-
-    setIsTransitioning(true)
-    setIsCinematicTransition(true)
-    setTransitionBlur(16)
-    setButtonsOpacity(1)
     setSelectedCategory("recent-work")
-
-    // Fetch videos for recent-work category
     await fetchVideos("recent-work")
-
-    try {
-      transitionVideo.currentTime = 0
-      transitionVideo.playbackRate = 1.0
-      await transitionVideo.play()
-      setIsTransitioning(false)
-    } catch (error) {
-      console.error("Transition video playback failed:", error)
-      setIsTransitioning(false)
-      setIsCinematicTransition(false)
-    }
+    setShowingRecentWork(true)
   }
 
   const handleCategoryClick = async (category: string) => {
     setSelectedCategory(category)
     await fetchVideos(category)
-    setRecentWorkEnded(true)
     setShowingRecentWork(true)
   }
 
@@ -249,75 +143,9 @@ export function VideoHomepage() {
   }
 
   const handleBackClick = () => {
-    const video = videoRef.current
-    if (!video) return
-
-    setRecentWorkEnded(false)
-    setIsReversing(true)
-    video.playbackRate = -2.0
-    video.play().catch((error) => {
-      console.error("Reverse playback failed:", error)
-    })
-  }
-
-  const handlePlayVideo = async () => {
-    const video = videoRef.current
-    if (!video || videoState !== "initial") {
-      console.log("Cannot play: video=", !!video, "state=", videoState)
-      return
-    }
-
-    try {
-      console.log("Attempting to play video...")
-      console.log("Video readyState:", video.readyState)
-      console.log("Video networkState:", video.networkState)
-      console.log("Video src:", video.src)
-      
-      // Wait for video to be ready if needed
-      if (video.readyState < 2) {
-        console.log("Waiting for video to load...")
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error("Video load timeout"))
-          }, 10000)
-          
-          const onCanPlay = () => {
-            clearTimeout(timeout)
-            video.removeEventListener("canplay", onCanPlay)
-            video.removeEventListener("error", onError)
-            resolve(undefined)
-          }
-          
-          const onError = () => {
-            clearTimeout(timeout)
-            video.removeEventListener("canplay", onCanPlay)
-            video.removeEventListener("error", onError)
-            reject(new Error("Video load error"))
-          }
-          
-          video.addEventListener("canplay", onCanPlay, { once: true })
-          video.addEventListener("error", onError, { once: true })
-          video.load()
-        })
-      }
-      
-      setHasTriggeredEarlyEnd(false)
-      video.playbackRate = 1.2
-      setVideoState("playing")
-      console.log("Calling video.play()...")
-      await video.play()
-      console.log("✅ Video play() succeeded")
-    } catch (error) {
-      console.error("❌ Video playback failed:", error)
-      console.error("Video error details:", {
-        error: video.error,
-        code: video.error?.code,
-        message: video.error?.message,
-        networkState: video.networkState,
-        readyState: video.readyState,
-      })
-      setVideoState("initial")
-    }
+    setShowingRecentWork(false)
+    setSelectedCategory(null)
+    setVideos([])
   }
 
   return (
@@ -325,14 +153,12 @@ export function VideoHomepage() {
       {/* Main Video Element */}
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover transition-all duration-500"
+        className="absolute inset-0 h-full w-full object-cover transition-all duration-300"
         style={{
-          filter: videoState === "ended" && !showingRecentWork && !isCinematicTransition ? "blur(16px)" : "none",
-          transform:
-            videoState === "ended" && !showingRecentWork && !isCinematicTransition ? "scale(1.05)" : "scale(1)",
-          opacity: (isHoveringEnterSign && videoState === "initial") || isCinematicTransition ? 0 : 1,
+          filter: `blur(${blurAmount}px)`,
+          transform: blurAmount > 0 ? "scale(1.05)" : "scale(1)",
         }}
-        preload="auto"
+        preload="metadata"
         playsInline
         muted
         onError={(e) => {
@@ -341,67 +167,88 @@ export function VideoHomepage() {
             error: video.error,
             code: video.error?.code,
             message: video.error?.message,
-            networkState: video.networkState,
-            readyState: video.readyState,
             src: video.src,
           })
         }}
       >
-        <source src="https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4" type="video/mp4" />
+        <source src={INTRO_VIDEO_URL} type="video/mp4" />
       </video>
 
-      <video
-        ref={transitionVideoRef}
-        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
-        style={{
-          opacity: isCinematicTransition ? 1 : 0,
-          filter: `blur(${transitionBlur}px)`,
-          pointerEvents: isCinematicTransition ? "none" : "none",
-        }}
-        preload="auto"
-        playsInline
-        muted
-      >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/FINAL%20whip%20pan-1ZTIjwXgQZdV2mD5L0rA8eo5zdzPHb.mp4" type="video/mp4" />
-      </video>
+      {/* Click to Enter Overlay - Only shown when frozen */}
+      {videoState === "frozen" && (
+        <div
+          onClick={handlePlayVideo}
+          className="absolute inset-0 z-30 flex items-center justify-center cursor-pointer bg-black/20 hover:bg-black/10 transition-colors"
+        >
+          <div className="text-center">
+            <p className="text-white text-2xl md:text-3xl font-light tracking-widest animate-pulse mb-2">
+              CLICK TO ENTER
+            </p>
+            <p className="text-white/60 text-sm md:text-base font-light tracking-wide">
+              Click anywhere to begin
+            </p>
+          </div>
+        </div>
+      )}
 
-      <video
-        ref={hoverVideoRef}
-        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-        style={{
-          opacity: isHoveringEnterSign && videoState === "initial" ? 1 : 0,
-          pointerEvents: "none",
-        }}
-        loop
-        muted
-        playsInline
-      >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ENTER%20SIGN-LwiMWSKi0848Vup44dcGPeAK8TuimZ.mp4" type="video/mp4" />
-      </video>
+      {/* Main Buttons - Shown after blur transition */}
+      {videoState === "ended" && !showingRecentWork && (
+        <div
+          className="absolute inset-0 z-20 flex flex-col transition-opacity duration-500"
+          style={{ opacity: buttonsOpacity }}
+        >
+          {/* Header Navigation */}
+          <header className="absolute top-0 left-0 right-0 z-30 p-6 md:p-8 lg:p-12">
+            <nav className="flex items-center justify-between">
+              <div className="text-white">
+                <h1 className="text-xl md:text-2xl font-light tracking-tight">{"CIRCUS17"}</h1>
+              </div>
+              <button className="text-white text-sm tracking-widest uppercase hover:opacity-70 transition-opacity">
+                {"Menu"}
+              </button>
+            </nav>
+          </header>
 
-      {videoState === "initial" && splashComplete && (
-        <>
-          {/* Click to enter overlay */}
-          <div
-            onClick={handlePlayVideo}
-            className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
-          >
-            <div className="text-white text-center">
-              <p className="text-lg md:text-xl font-light tracking-widest animate-pulse">{"CLICK TO ENTER"}</p>
+          <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-24">
+            <div className="flex flex-col gap-3 w-full max-w-md ml-8">
+              <button
+                onClick={handleRecentWorkClick}
+                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
+              >
+                {"RECENT WORK"}
+              </button>
+              <button
+                onClick={() => handleCategoryClick("industry-work")}
+                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
+              >
+                {"Industry work"}
+              </button>
+              <button
+                onClick={() => handleCategoryClick("music-video")}
+                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
+              >
+                {"MUSIC VIDEO"}
+              </button>
+              <button
+                onClick={() => handleCategoryClick("narrative")}
+                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
+              >
+                {"NARRATIVE"}
+              </button>
             </div>
           </div>
 
-          {/* Hover zone for enter sign flicker - bottom right quadrant */}
-          <div
-            className="absolute bottom-0 right-0 w-1/2 h-1/2 z-10"
-            onMouseEnter={() => setIsHoveringEnterSign(true)}
-            onMouseLeave={() => setIsHoveringEnterSign(false)}
-          />
-        </>
+          <footer className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-12">
+            <div className="flex items-center justify-between text-white/50 text-xs tracking-wide">
+              <span>{"© 2025 Circus17"}</span>
+            </div>
+          </footer>
+        </div>
       )}
 
-      {recentWorkEnded && !isCinematicTransition && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center p-8 md:p-16">
+      {/* Video Gallery - Shown when category is selected */}
+      {showingRecentWork && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center p-8 md:p-16 bg-black/60 backdrop-blur-sm">
           <button
             onClick={handleBackClick}
             className="absolute top-6 left-6 md:top-8 md:left-8 z-40 px-4 py-2 text-white text-xs md:text-sm font-light tracking-wide border border-white/40 bg-black/20 backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-300"
@@ -439,76 +286,7 @@ export function VideoHomepage() {
         </div>
       )}
 
-      {videoState === "ended" && !showingRecentWork && (
-        <div
-          className="absolute inset-0 z-20 flex flex-col transition-opacity duration-500"
-          style={{ opacity: isCinematicTransition ? buttonsOpacity : 1 }}
-        >
-          {/* Header Navigation */}
-          <header className="absolute top-0 left-0 right-0 z-30 p-6 md:p-8 lg:p-12">
-            <nav className="flex items-center justify-between">
-              <div className="text-white">
-                <h1 className="text-xl md:text-2xl font-light tracking-tight">{"CIRCUS17"}</h1>
-              </div>
-              <button className="text-white text-sm tracking-widest uppercase hover:opacity-70 transition-opacity">
-                {"Menu"}
-              </button>
-            </nav>
-          </header>
-
-          <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-24">
-            <div className="flex flex-col gap-3 w-full max-w-md ml-8">
-              <button
-                onClick={handleRecentWorkClick}
-                disabled={isTransitioning}
-                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {"RECENT WORK"}
-              </button>
-              <button
-                onClick={() => handleCategoryClick("industry-work")}
-                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
-              >
-                {"Industry work"}
-              </button>
-              <button
-                onClick={() => handleCategoryClick("music-video")}
-                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
-              >
-                {"MUSIC VIDEO"}
-              </button>
-              <button
-                onClick={() => handleCategoryClick("narrative")}
-                className="group relative px-6 py-3 text-white text-sm md:text-base font-light tracking-wide text-center border border-white bg-transparent hover:bg-white hover:text-black transition-all duration-300"
-              >
-                {"NARRATIVE"}
-              </button>
-            </div>
-          </div>
-
-          <footer className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-12">
-            <div className="flex items-center justify-between text-white/50 text-xs tracking-wide">
-              <span>{"© 2025 Circus17"}</span>
-            </div>
-          </footer>
-        </div>
-      )}
-
-      {videoState === "ended" && !showingRecentWork && (
-        <div
-          className="absolute inset-0 bg-black/40 z-10 transition-opacity duration-500"
-          style={{ opacity: isCinematicTransition ? buttonsOpacity * 0.4 : 0.4 }}
-        />
-      )}
-
-      {!splashComplete && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black">
-          <video ref={splashVideoRef} autoPlay muted playsInline className="w-48 h-48 md:w-64 md:h-64 object-contain">
-            <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mp4%20circus%20logo-LA8G5Bg1Im4bgoFJZTNjVxzpUfI6SM.mp4" type="video/mp4" />
-          </video>
-        </div>
-      )}
-
+      {/* Video Player Modal */}
       {selectedVideo && (
         <VideoPlayer
           videoUrl={selectedVideo.video_url}
