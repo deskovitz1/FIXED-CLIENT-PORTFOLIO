@@ -20,6 +20,7 @@ export function VideoHomepage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showDebug, setShowDebug] = useState(false)
   const [debugLogs, setDebugLogs] = useState<DebugLog[]>([])
+  const [featuredVideo, setFeaturedVideo] = useState<Video | null>(null)
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map())
 
   const addDebugLog = (type: DebugLog["type"], message: string, data?: any) => {
@@ -63,15 +64,22 @@ export function VideoHomepage() {
       }
       
       const data = await response.json()
-      addDebugLog("success", `Loaded ${data.videos?.length || 0} videos`, {
-        videos: data.videos?.map((v: Video) => ({
+      const loadedVideos = data.videos || []
+      addDebugLog("success", `Loaded ${loadedVideos.length} videos`, {
+        videos: loadedVideos.map((v: Video) => ({
           id: v.id,
           title: v.title,
           blob_url: v.blob_url?.substring(0, 50) + "...",
           video_url: v.video_url?.substring(0, 50) + "...",
         }))
       })
-      setVideos(data.videos || [])
+      setVideos(loadedVideos)
+      // Set first video as featured (always update when videos change)
+      if (loadedVideos.length > 0) {
+        setFeaturedVideo(loadedVideos[0])
+      } else {
+        setFeaturedVideo(null)
+      }
     } catch (error) {
       addDebugLog("error", "Error fetching videos", { error })
       console.error("Error fetching videos:", error)
@@ -317,135 +325,229 @@ export function VideoHomepage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {videos.map((video) => {
-              const videoUrl = video.video_url || video.blob_url
-
-              return (
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Featured Video (Left Side - Larger) */}
+            {featuredVideo && (
+              <div className="flex-1 lg:max-w-[70%]">
                 <div
-                  key={video.id}
                   className="group cursor-pointer"
-                  onClick={() => handleVideoClick(video)}
+                  onClick={() => handleVideoClick(featuredVideo)}
                 >
-                  {/* Thumbnail */}
-                  <div className="relative aspect-video bg-[#181818] rounded-lg overflow-hidden mb-3">
-                    {videoUrl ? (
-                      <video
-                        ref={(el) => {
-                          if (el) {
-                            videoRefs.current.set(video.id, el)
-                          } else {
-                            videoRefs.current.delete(video.id)
-                          }
-                        }}
-                        src={videoUrl}
-                        className="w-full h-full object-cover"
-                        preload="metadata"
-                        muted
-                        playsInline
-                        onLoadedMetadata={(e) => handleVideoLoad(video.id, e)}
-                        onLoadedData={(e) => {
-                          addDebugLog("success", `Video ${video.id} data loaded`, {
-                            readyState: e.currentTarget.readyState,
-                          })
-                        }}
-                        onCanPlay={(e) => {
-                          addDebugLog("success", `Video ${video.id} can play`, {
-                            readyState: e.currentTarget.readyState,
-                            duration: e.currentTarget.duration,
-                          })
-                        }}
-                        onError={(e) => handleVideoError(video.id, e)}
-                        onMouseEnter={async (e) => {
-                          const videoEl = e.currentTarget
-                          if (!videoEl.isConnected) return
-                          
-                          try {
-                            videoEl.currentTime = 1
-                            await videoEl.play()
-                            addDebugLog("success", `Video ${video.id} hover preview playing`)
-                          } catch (error: any) {
-                            if (error.name !== "AbortError") {
-                              addDebugLog("warning", `Video ${video.id} hover preview failed`, {
-                                error: error.message,
-                                name: error.name,
-                              })
+                  {/* Featured Video Thumbnail */}
+                  <div className="relative aspect-video bg-[#181818] rounded-lg overflow-hidden mb-4">
+                    {(() => {
+                      const videoUrl = featuredVideo.video_url || featuredVideo.blob_url
+                      return videoUrl ? (
+                        <video
+                          ref={(el) => {
+                            if (el) {
+                              videoRefs.current.set(featuredVideo.id, el)
+                            } else {
+                              videoRefs.current.delete(featuredVideo.id)
                             }
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          const videoEl = e.currentTarget
-                          if (!videoEl.isConnected) return
-                          
-                          requestAnimationFrame(() => {
-                            if (videoEl.isConnected) {
-                              try {
-                                videoEl.pause()
-                                videoEl.currentTime = 0
-                              } catch (error) {
-                                // Silently handle pause errors
+                          }}
+                          src={videoUrl}
+                          className="w-full h-full object-cover"
+                          preload="metadata"
+                          muted
+                          playsInline
+                          onLoadedMetadata={(e) => handleVideoLoad(featuredVideo.id, e)}
+                          onLoadedData={(e) => {
+                            addDebugLog("success", `Video ${featuredVideo.id} data loaded`, {
+                              readyState: e.currentTarget.readyState,
+                            })
+                          }}
+                          onCanPlay={(e) => {
+                            addDebugLog("success", `Video ${featuredVideo.id} can play`, {
+                              readyState: e.currentTarget.readyState,
+                              duration: e.currentTarget.duration,
+                            })
+                          }}
+                          onError={(e) => handleVideoError(featuredVideo.id, e)}
+                          onMouseEnter={async (e) => {
+                            const videoEl = e.currentTarget
+                            if (!videoEl.isConnected) return
+                            
+                            try {
+                              videoEl.currentTime = 1
+                              await videoEl.play()
+                              addDebugLog("success", `Video ${featuredVideo.id} hover preview playing`)
+                            } catch (error: any) {
+                              if (error.name !== "AbortError") {
+                                addDebugLog("warning", `Video ${featuredVideo.id} hover preview failed`, {
+                                  error: error.message,
+                                  name: error.name,
+                                })
                               }
                             }
-                          })
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-red-900/20 border-2 border-red-500">
-                        <div className="text-center p-4">
-                          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                          <p className="text-xs text-red-400">No video URL</p>
-                          <p className="text-[10px] text-red-500 mt-1">
-                            ID: {video.id}
-                          </p>
+                          }}
+                          onMouseLeave={(e) => {
+                            const videoEl = e.currentTarget
+                            if (!videoEl.isConnected) return
+                            
+                            requestAnimationFrame(() => {
+                              if (videoEl.isConnected) {
+                                try {
+                                  videoEl.pause()
+                                  videoEl.currentTime = 0
+                                } catch (error) {
+                                  // Silently handle pause errors
+                                }
+                              }
+                            })
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-red-900/20 border-2 border-red-500">
+                          <div className="text-center p-4">
+                            <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                            <p className="text-xs text-red-400">No video URL</p>
+                            <p className="text-[10px] text-red-500 mt-1">
+                              ID: {featuredVideo.id}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )
+                    })()}
                     {/* Play Overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                      <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center">
-                        <Play className="w-8 h-8 text-black ml-1" fill="black" />
+                      <div className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center">
+                        <Play className="w-10 h-10 text-black ml-1" fill="black" />
                       </div>
                     </div>
                     {/* Duration Badge */}
-                    {video.duration && (
-                      <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-xs">
-                        {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, "0")}
+                    {featuredVideo.duration && (
+                      <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-sm">
+                        {Math.floor(featuredVideo.duration / 60)}:{(featuredVideo.duration % 60).toString().padStart(2, "0")}
                       </div>
                     )}
                   </div>
 
-                  {/* Video Info */}
-                  <div className="flex gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
-                        {video.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
-                        {video.category && (
-                          <span className="px-2 py-0.5 bg-[#272727] rounded-full">
-                            {video.category}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(video.created_at)}
+                  {/* Featured Video Info */}
+                  <div>
+                    <h2 className="font-semibold text-lg mb-2 group-hover:text-blue-400 transition-colors">
+                      {featuredVideo.title}
+                    </h2>
+                    <div className="flex items-center gap-3 text-sm text-gray-400 mb-2">
+                      {featuredVideo.category && (
+                        <span className="px-3 py-1 bg-[#272727] rounded-full">
+                          {featuredVideo.category}
                         </span>
-                      </div>
-                      {video.description && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                          {video.description}
-                        </p>
                       )}
-                      {video.file_size && (
-                        <p className="text-xs text-gray-600 mt-1">
-                          {formatFileSize(video.file_size)}
-                        </p>
-                      )}
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {formatDate(featuredVideo.created_at)}
+                      </span>
                     </div>
+                    {featuredVideo.description && (
+                      <p className="text-sm text-gray-300 line-clamp-3">
+                        {featuredVideo.description}
+                      </p>
+                    )}
                   </div>
                 </div>
-              )
-            })}
+              </div>
+            )}
+
+            {/* Sidebar Videos (Right Side - Smaller, Vertical) */}
+            <div className="lg:w-[30%] space-y-3">
+              {videos
+                .filter((video) => video.id !== featuredVideo?.id)
+                .map((video) => {
+                  const videoUrl = video.video_url || video.blob_url
+
+                  return (
+                    <div
+                      key={video.id}
+                      className="group cursor-pointer flex gap-3"
+                      onClick={() => {
+                        setFeaturedVideo(video)
+                        handleVideoClick(video)
+                      }}
+                    >
+                      {/* Sidebar Video Thumbnail */}
+                      <div className="relative w-40 h-24 flex-shrink-0 bg-[#181818] rounded-lg overflow-hidden">
+                        {videoUrl ? (
+                          <video
+                            ref={(el) => {
+                              if (el) {
+                                videoRefs.current.set(video.id, el)
+                              } else {
+                                videoRefs.current.delete(video.id)
+                              }
+                            }}
+                            src={videoUrl}
+                            className="w-full h-full object-cover"
+                            preload="metadata"
+                            muted
+                            playsInline
+                            onLoadedMetadata={(e) => handleVideoLoad(video.id, e)}
+                            onError={(e) => handleVideoError(video.id, e)}
+                            onMouseEnter={async (e) => {
+                              const videoEl = e.currentTarget
+                              if (!videoEl.isConnected) return
+                              
+                              try {
+                                videoEl.currentTime = 1
+                                await videoEl.play()
+                              } catch (error: any) {
+                                // Silently handle AbortError
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              const videoEl = e.currentTarget
+                              if (!videoEl.isConnected) return
+                              
+                              requestAnimationFrame(() => {
+                                if (videoEl.isConnected) {
+                                  try {
+                                    videoEl.pause()
+                                    videoEl.currentTime = 0
+                                  } catch (error) {
+                                    // Silently handle pause errors
+                                  }
+                                }
+                              })
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-red-900/20">
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          </div>
+                        )}
+                        {/* Play Overlay */}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <Play className="w-6 h-6 text-white" fill="white" />
+                        </div>
+                        {/* Duration Badge */}
+                        {video.duration && (
+                          <div className="absolute bottom-1 right-1 bg-black/80 px-1 py-0.5 rounded text-[10px]">
+                            {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, "0")}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sidebar Video Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
+                          {video.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          {video.category && (
+                            <span className="px-1.5 py-0.5 bg-[#272727] rounded text-[10px]">
+                              {video.category}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-2.5 h-2.5" />
+                            {formatDate(video.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
           </div>
         )}
       </main>
