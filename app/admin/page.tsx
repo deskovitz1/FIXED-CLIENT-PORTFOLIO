@@ -75,14 +75,24 @@ export default function AdminPage() {
         uploadFormData.append("category", formData.category)
       }
 
+      console.log("Sending POST request to /api/videos")
       const response = await fetch("/api/videos", {
         method: "POST",
         body: uploadFormData,
       })
 
+      console.log("Response status:", response.status, response.statusText)
+      
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Upload failed")
+        const errorText = await response.text()
+        console.error("Error response:", errorText)
+        let error
+        try {
+          error = JSON.parse(errorText)
+        } catch {
+          error = { error: errorText || `Upload failed with status ${response.status}` }
+        }
+        throw new Error(error.error || `Upload failed with status ${response.status}`)
       }
 
       const result = await response.json()
