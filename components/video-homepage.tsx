@@ -21,24 +21,44 @@ export function VideoHomepage() {
 
   useEffect(() => {
     const video = videoRef.current
-    const currentVideoState = videoState
-    if (!video || currentVideoState === "skipped") return
-
-    // Set video source only if not already set
-    if (video.src !== INTRO_VIDEO_URL) {
-      video.src = INTRO_VIDEO_URL
-      video.load()
+    if (!video) {
+      console.warn("⚠️ Video ref is null")
+      return
     }
 
+    const currentVideoState = videoState
+    if (currentVideoState === "skipped") {
+      console.log("⏭️ Video skipped, not loading")
+      return
+    }
+
+    console.log("🎬 Setting up video...", { currentVideoState })
+
+    // Always set video source
+    video.src = INTRO_VIDEO_URL
+    video.load()
+    console.log("📹 Video source set, loading...")
+
     const handleLoadedMetadata = () => {
-      // Check if video is still connected and state hasn't changed
-      if (!video.isConnected) return
+      console.log("✅ Video metadata loaded")
+      if (!video.isConnected) {
+        console.warn("⚠️ Video not connected when metadata loaded")
+        return
+      }
       
       // Freeze on first frame
       video.currentTime = 0
       video.pause()
       setIsLoaded(true)
-      console.log("✅ Video loaded, frozen on first frame")
+      console.log("✅ Video frozen on first frame")
+    }
+
+    const handleLoadedData = () => {
+      console.log("✅ Video data loaded")
+    }
+
+    const handleCanPlay = () => {
+      console.log("✅ Video can play")
     }
 
     const handleTimeUpdate = () => {
@@ -60,21 +80,25 @@ export function VideoHomepage() {
         error: video.error,
         code: video.error?.code,
         message: video.error?.message,
+        networkState: video.networkState,
+        readyState: video.readyState,
         src: video.src,
       })
     }
 
-    // Only add listeners if video is connected
-    if (video.isConnected) {
-      video.addEventListener("loadedmetadata", handleLoadedMetadata)
-      video.addEventListener("timeupdate", handleTimeUpdate)
-      video.addEventListener("error", handleError)
-    }
+    // Add all listeners
+    video.addEventListener("loadedmetadata", handleLoadedMetadata)
+    video.addEventListener("loadeddata", handleLoadedData)
+    video.addEventListener("canplay", handleCanPlay)
+    video.addEventListener("timeupdate", handleTimeUpdate)
+    video.addEventListener("error", handleError)
 
     return () => {
       // Safely remove listeners
       if (video.isConnected) {
         video.removeEventListener("loadedmetadata", handleLoadedMetadata)
+        video.removeEventListener("loadeddata", handleLoadedData)
+        video.removeEventListener("canplay", handleCanPlay)
         video.removeEventListener("timeupdate", handleTimeUpdate)
         video.removeEventListener("error", handleError)
       }
@@ -213,8 +237,9 @@ export function VideoHomepage() {
           transform: blurAmount > 0 ? "scale(1.05)" : "scale(1)",
           opacity: videoState === "skipped" ? 0 : 1,
           pointerEvents: videoState === "skipped" ? "none" : "auto",
+          zIndex: 1,
         }}
-        preload="metadata"
+        preload="auto"
         playsInline
         muted
         onLoadedMetadata={() => {
@@ -222,8 +247,14 @@ export function VideoHomepage() {
           if (video && videoState !== "skipped") {
             video.currentTime = 0
             video.pause()
-            console.log("📹 Video metadata loaded, frozen at start")
+            console.log("📹 Video metadata loaded via onLoadedMetadata, frozen at start")
           }
+        }}
+        onLoadedData={() => {
+          console.log("📹 Video data loaded via onLoadedData")
+        }}
+        onCanPlay={() => {
+          console.log("📹 Video can play via onCanPlay")
         }}
         onError={(e) => {
           const video = e.currentTarget
@@ -231,6 +262,8 @@ export function VideoHomepage() {
             error: video.error,
             code: video.error?.code,
             message: video.error?.message,
+            networkState: video.networkState,
+            readyState: video.readyState,
             src: video.src,
           })
         }}
