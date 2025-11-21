@@ -15,22 +15,28 @@ export interface Video {
   updated_at: string;
 }
 
-export async function getVideos(category?: string): Promise<Video[]> {
+// Intro video filename - excluded from regular video listings
+const INTRO_VIDEO_FILENAME = "door_flies_open_and_we_DOLLY_ZOOM_FAST_into_that_door_into_the_theatre_and_delete_the_sign_in_the_th.mp4"
+
+export async function getVideos(category?: string, excludeIntro: boolean = true): Promise<Video[]> {
   try {
+    const whereClause: any = {}
+    
     if (category) {
-      const videos = await prisma.video.findMany({
-        where: { category },
-        orderBy: { created_at: "desc" },
-      });
-      return videos.map((v: any) => ({
-        ...v,
-        file_size: v.file_size ? Number(v.file_size) : null,
-        created_at: v.created_at.toISOString(),
-        updated_at: v.updated_at.toISOString(),
-      })) as Video[];
+      whereClause.category = category
+    }
+    
+    // Exclude intro video from regular listings
+    if (excludeIntro) {
+      whereClause.file_name = {
+        not: {
+          contains: INTRO_VIDEO_FILENAME,
+        },
+      }
     }
     
     const videos = await prisma.video.findMany({
+      where: whereClause,
       orderBy: { created_at: "desc" },
     });
     return videos.map((v: any) => ({
@@ -42,6 +48,30 @@ export async function getVideos(category?: string): Promise<Video[]> {
   } catch (error) {
     console.error("Error in getVideos:", error);
     throw error;
+  }
+}
+
+export async function getIntroVideo(): Promise<Video | null> {
+  try {
+    const video = await prisma.video.findFirst({
+      where: {
+        file_name: {
+          contains: INTRO_VIDEO_FILENAME,
+        },
+      },
+    });
+    
+    if (!video) return null
+    
+    return {
+      ...video,
+      file_size: video.file_size ? Number(video.file_size) : null,
+      created_at: video.created_at.toISOString(),
+      updated_at: video.updated_at.toISOString(),
+    } as Video;
+  } catch (error) {
+    console.error("Error in getIntroVideo:", error);
+    return null;
   }
 }
 

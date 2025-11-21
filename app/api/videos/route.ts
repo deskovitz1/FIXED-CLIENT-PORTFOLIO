@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideos, createVideo } from "@/lib/db";
+import { getVideos, createVideo, getIntroVideo } from "@/lib/db";
 import { put } from "@vercel/blob";
 
-// GET all videos
+// GET all videos (excludes intro video by default)
 export async function GET(request: NextRequest) {
   try {
     console.log("GET /api/videos - Fetching videos");
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get("category");
+    const includeIntro = searchParams.get("includeIntro") === "true";
     
     console.log("Category filter:", category || "none");
-    const videos = await getVideos(category || undefined);
+    console.log("Include intro:", includeIntro);
+    const videos = await getVideos(category || undefined, !includeIntro);
     console.log(`Found ${videos.length} video(s)`);
     return NextResponse.json({ videos });
   } catch (error) {
