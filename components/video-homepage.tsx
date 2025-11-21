@@ -34,7 +34,19 @@ export function VideoHomepage() {
 
     const handleLoadedData = () => {
       setIsLoaded(true)
-      console.log("✅ Video loaded successfully")
+      console.log("✅ Video loaded successfully", {
+        readyState: video.readyState,
+        networkState: video.networkState,
+        duration: video.duration,
+        src: video.src,
+      })
+    }
+    
+    const handleCanPlay = () => {
+      console.log("✅ Video can play", {
+        readyState: video.readyState,
+        duration: video.duration,
+      })
     }
 
     const handleError = (e: Event) => {
@@ -93,12 +105,14 @@ export function VideoHomepage() {
     }
 
     video.addEventListener("loadeddata", handleLoadedData)
+    video.addEventListener("canplay", handleCanPlay)
     video.addEventListener("error", handleError)
     video.addEventListener("ended", handleEnded)
     video.addEventListener("timeupdate", handleTimeUpdate)
 
     return () => {
       video.removeEventListener("loadeddata", handleLoadedData)
+      video.removeEventListener("canplay", handleCanPlay)
       video.removeEventListener("error", handleError)
       video.removeEventListener("ended", handleEnded)
       video.removeEventListener("timeupdate", handleTimeUpdate)
@@ -248,15 +262,60 @@ export function VideoHomepage() {
 
   const handlePlayVideo = async () => {
     const video = videoRef.current
-    if (!video || videoState !== "initial") return
+    if (!video || videoState !== "initial") {
+      console.log("Cannot play: video=", !!video, "state=", videoState)
+      return
+    }
 
     try {
+      console.log("Attempting to play video...")
+      console.log("Video readyState:", video.readyState)
+      console.log("Video networkState:", video.networkState)
+      console.log("Video src:", video.src)
+      
+      // Wait for video to be ready if needed
+      if (video.readyState < 2) {
+        console.log("Waiting for video to load...")
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("Video load timeout"))
+          }, 10000)
+          
+          const onCanPlay = () => {
+            clearTimeout(timeout)
+            video.removeEventListener("canplay", onCanPlay)
+            video.removeEventListener("error", onError)
+            resolve(undefined)
+          }
+          
+          const onError = () => {
+            clearTimeout(timeout)
+            video.removeEventListener("canplay", onCanPlay)
+            video.removeEventListener("error", onError)
+            reject(new Error("Video load error"))
+          }
+          
+          video.addEventListener("canplay", onCanPlay, { once: true })
+          video.addEventListener("error", onError, { once: true })
+          video.load()
+        })
+      }
+      
       setHasTriggeredEarlyEnd(false)
       video.playbackRate = 1.2
       setVideoState("playing")
+      console.log("Calling video.play()...")
       await video.play()
+      console.log("✅ Video play() succeeded")
     } catch (error) {
-      console.error("Video playback failed:", error)
+      console.error("❌ Video playback failed:", error)
+      console.error("Video error details:", {
+        error: video.error,
+        code: video.error?.code,
+        message: video.error?.message,
+        networkState: video.networkState,
+        readyState: video.readyState,
+      })
       setVideoState("initial")
     }
   }
