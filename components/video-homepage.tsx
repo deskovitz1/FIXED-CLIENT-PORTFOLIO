@@ -172,9 +172,10 @@ export function VideoHomepage() {
       // Wait a tiny bit to ensure state update is processed
       await new Promise(resolve => setTimeout(resolve, 10))
       
-      // Double-check video is still valid and state hasn't changed
-      if (!videoRef.current || !videoRef.current.isConnected || videoState !== "playing") {
-        console.warn("⚠️ Video state changed before play, aborting")
+      // Double-check video is still valid
+      const currentVideo = videoRef.current
+      if (!currentVideo || !currentVideo.isConnected) {
+        console.warn("⚠️ Video removed before play, aborting")
         setVideoState("frozen")
         return
       }
@@ -193,7 +194,7 @@ export function VideoHomepage() {
         // Try again after a short delay
         setTimeout(async () => {
           const video = videoRef.current
-          if (video && videoState === "playing") {
+          if (video) {
             try {
               await video.play()
               console.log("✅ Video playing after retry")
