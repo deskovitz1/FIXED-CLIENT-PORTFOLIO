@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "start": "next start",
     "verify-env": "tsx scripts/verify-env.ts",
-    "check-vercel-env": "bash scripts/check-vercel-env.sh"
+    "check-vercel-env": "bash scripts/check-vercel-env.sh",
+    "upload-video": "tsx scripts/upload-video.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
