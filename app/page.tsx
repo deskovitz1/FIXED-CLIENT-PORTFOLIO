@@ -13,21 +13,20 @@ export default function IntroLanding() {
     // prevent double-click spam
     if (started) return
     setStarted(true)
+
+    // Try to play video (optional, doesn't block navigation)
     const video = videoRef.current
-    if (!video) return
-    video
-      .play()
-      .then(() => {
-        console.log("Intro video playing")
-      })
-      .catch((err) => {
+    if (video) {
+      video.play().catch((err) => {
         console.error("Intro play failed:", err)
       })
-  }
+    }
 
-  const handleEnded = () => {
-    console.log("Intro ended, navigating to /menu")
-    router.push("/menu")
+    // Always navigate to menu after short delay, regardless of video state
+    setTimeout(() => {
+      console.log("Navigating to /menu")
+      router.push("/menu")
+    }, 500) // 500ms delay
   }
 
   return (
@@ -36,11 +35,10 @@ export default function IntroLanding() {
         ref={videoRef}
         src={INTRO_VIDEO_URL}
         className="w-full h-full object-cover"
-        onEnded={handleEnded}
         playsInline
         muted={true}
         controls={false}
-        // IMPORTANT: no loop, no autoPlay
+        // IMPORTANT: no loop, no autoPlay, no onEnded
       />
 
       {/* Overlay text before start */}
