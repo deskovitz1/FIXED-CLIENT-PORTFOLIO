@@ -181,11 +181,11 @@ export function VideoHomepage() {
       }
 
       // Ensure video is at the start
-      if (videoRef.current.currentTime !== 0) {
-        videoRef.current.currentTime = 0
+      if (currentVideo.currentTime !== 0) {
+        currentVideo.currentTime = 0
       }
 
-      await videoRef.current.play()
+      await currentVideo.play()
       console.log("✅ Video playing")
     } catch (error: any) {
       // Handle AbortError specifically (video was paused/interrupted)
