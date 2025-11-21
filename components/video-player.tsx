@@ -14,15 +14,48 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ videoUrl, title, isOpen, onClose }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isReady, setIsReady] = useState(false)
   const playerRef = useRef<ReactPlayer>(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    if (isOpen) {
-      setIsPlaying(true)
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isOpen && mountedRef.current) {
+      // Wait a bit for the player to mount before trying to play
+      const timer = setTimeout(() => {
+        if (mountedRef.current && isReady) {
+          setIsPlaying(true)
+        }
+      }, 100)
+      return () => clearTimeout(timer)
     } else {
       setIsPlaying(false)
     }
-  }, [isOpen])
+  }, [isOpen, isReady])
+
+  const handleReady = () => {
+    if (mountedRef.current) {
+      setIsReady(true)
+      // Start playing after a short delay to ensure player is ready
+      setTimeout(() => {
+        if (mountedRef.current) {
+          setIsPlaying(true)
+        }
+      }, 200)
+    }
+  }
+
+  const handleError = (error: any) => {
+    console.error("Video playback error:", error)
+    // Don't try to play if there's an error
+    setIsPlaying(false)
+  }
 
   if (!isOpen) return null
 
@@ -46,16 +79,16 @@ export function VideoPlayer({ videoUrl, title, isOpen, onClose }: VideoPlayerPro
             controls
             width="100%"
             height="100%"
+            onReady={handleReady}
+            onError={handleError}
             config={{
               file: {
                 attributes: {
                   controlsList: "nodownload",
+                  preload: "auto",
                 },
                 forceVideo: true,
               },
-            }}
-            onError={(error) => {
-              console.error("Video playback error:", error)
             }}
           />
         </div>

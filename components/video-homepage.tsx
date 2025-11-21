@@ -79,12 +79,28 @@ export function VideoHomepage() {
     }
   }
 
-  const handleVideoClick = (video: Video) => {
+  const handleVideoClick = async (video: Video) => {
     addDebugLog("info", "Video clicked", { 
       id: video.id, 
       title: video.title,
       url: video.video_url || video.blob_url 
     })
+    
+    // Pause any hover previews first
+    videoRefs.current.forEach((videoEl) => {
+      if (videoEl && !videoEl.paused) {
+        try {
+          videoEl.pause()
+          videoEl.currentTime = 0
+        } catch (error) {
+          // Ignore pause errors
+        }
+      }
+    })
+    
+    // Wait a bit to ensure all videos are paused
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
     setSelectedVideo(video)
     setIsPlayerOpen(true)
   }
