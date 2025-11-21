@@ -24,6 +24,7 @@ export function VideoHomepage() {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [hasTriggeredEarlyEnd, setHasTriggeredEarlyEnd] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
@@ -49,6 +50,7 @@ export function VideoHomepage() {
         setIsReversing(false)
         setShowingRecentWork(false)
         setRecentWorkEnded(false)
+        setHasTriggeredEarlyEnd(false)
         video.src = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/smaller%20intro%20video-5p1JPBX2ybN86Pz32yeNEcsN7C7hA8.mp4"
         video.load()
         video.addEventListener(
@@ -63,13 +65,15 @@ export function VideoHomepage() {
       }
 
       // Cut video 3 seconds early for initial intro video
-      if (!showingRecentWork && videoState === "playing" && video.duration > 0 && video.duration - video.currentTime <= 3) {
+      // Only trigger if: not showing recent work, video is playing, duration is loaded, we haven't already triggered, and we're within 3 seconds of the end
+      if (!showingRecentWork && videoState === "playing" && !hasTriggeredEarlyEnd && video.duration > 0 && isFinite(video.duration) && video.currentTime > 1 && video.duration - video.currentTime <= 3 && video.duration - video.currentTime > 0) {
         video.pause()
         setVideoState("ended")
+        setHasTriggeredEarlyEnd(true)
         return
       }
 
-      if (showingRecentWork && !isReversing && video.duration - video.currentTime <= 3) {
+      if (showingRecentWork && !isReversing && video.duration > 0 && video.duration - video.currentTime <= 3) {
         video.pause()
         setRecentWorkEnded(true)
       }
@@ -84,7 +88,7 @@ export function VideoHomepage() {
       video.removeEventListener("ended", handleEnded)
       video.removeEventListener("timeupdate", handleTimeUpdate)
     }
-  }, [showingRecentWork, isReversing, videoState])
+  }, [showingRecentWork, isReversing, videoState, hasTriggeredEarlyEnd])
 
   useEffect(() => {
     const splashVideo = splashVideoRef.current
@@ -232,6 +236,7 @@ export function VideoHomepage() {
     if (!video || videoState !== "initial") return
 
     try {
+      setHasTriggeredEarlyEnd(false)
       video.playbackRate = 1.2
       setVideoState("playing")
       await video.play()
