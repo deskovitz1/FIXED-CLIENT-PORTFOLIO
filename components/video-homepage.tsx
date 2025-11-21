@@ -62,6 +62,13 @@ export function VideoHomepage() {
         return
       }
 
+      // Cut video 3 seconds early for initial intro video
+      if (!showingRecentWork && videoState === "playing" && video.duration > 0 && video.duration - video.currentTime <= 3) {
+        video.pause()
+        setVideoState("ended")
+        return
+      }
+
       if (showingRecentWork && !isReversing && video.duration - video.currentTime <= 3) {
         video.pause()
         setRecentWorkEnded(true)
@@ -77,7 +84,7 @@ export function VideoHomepage() {
       video.removeEventListener("ended", handleEnded)
       video.removeEventListener("timeupdate", handleTimeUpdate)
     }
-  }, [showingRecentWork, isReversing])
+  }, [showingRecentWork, isReversing, videoState])
 
   useEffect(() => {
     const splashVideo = splashVideoRef.current
