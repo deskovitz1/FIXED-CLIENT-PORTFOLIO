@@ -51,7 +51,7 @@ export function VideoHomepage() {
         setShowingRecentWork(false)
         setRecentWorkEnded(false)
         setHasTriggeredEarlyEnd(false)
-        video.src = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/smaller%20intro%20video-5p1JPBX2ybN86Pz32yeNEcsN7C7hA8.mp4"
+        video.src = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4"
         video.load()
         video.addEventListener(
           "loadeddata",
@@ -262,7 +262,7 @@ export function VideoHomepage() {
         playsInline
         muted
       >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/smaller%20intro%20video-5p1JPBX2ybN86Pz32yeNEcsN7C7hA8.mp4" type="video/mp4" />
+        <source src="https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4" type="video/mp4" />
       </video>
 
       <video
