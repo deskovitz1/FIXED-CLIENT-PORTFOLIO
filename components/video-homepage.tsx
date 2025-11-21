@@ -147,15 +147,36 @@ export function VideoHomepage() {
                     className="w-full h-full object-cover"
                     preload="metadata"
                     muted
-                    onMouseEnter={(e) => {
-                      const video = e.currentTarget
-                      video.currentTime = 1
-                      video.play().catch(() => {})
+                    playsInline
+                    onMouseEnter={async (e) => {
+                      const videoEl = e.currentTarget
+                      if (!videoEl.isConnected) return
+                      
+                      try {
+                        videoEl.currentTime = 1
+                        await videoEl.play()
+                      } catch (error: any) {
+                        // Silently handle errors (autoplay restrictions, etc.)
+                        if (error.name !== "AbortError") {
+                          console.debug("Video hover preview error:", error)
+                        }
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      const video = e.currentTarget
-                      video.pause()
-                      video.currentTime = 0
+                      const videoEl = e.currentTarget
+                      if (!videoEl.isConnected) return
+                      
+                      // Use requestAnimationFrame to avoid interrupting play()
+                      requestAnimationFrame(() => {
+                        if (videoEl.isConnected) {
+                          videoEl.pause().catch(() => {})
+                          videoEl.currentTime = 0
+                        }
+                      })
+                    }}
+                    onError={(e) => {
+                      // Silently handle video errors
+                      console.debug("Video thumbnail error:", e)
                     }}
                   />
                   {/* Play Overlay */}
