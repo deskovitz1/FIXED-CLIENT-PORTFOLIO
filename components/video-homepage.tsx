@@ -285,13 +285,6 @@ export function VideoHomepage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {videos.map((video) => {
               const videoUrl = video.video_url || video.blob_url
-              addDebugLog("info", `Rendering video ${video.id}`, {
-                id: video.id,
-                title: video.title,
-                hasBlobUrl: !!video.blob_url,
-                hasVideoUrl: !!video.video_url,
-                finalUrl: videoUrl?.substring(0, 50) + "...",
-              })
 
               return (
                 <div
