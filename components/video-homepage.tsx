@@ -31,7 +31,8 @@ export function VideoHomepage() {
 
     const handleLoadedMetadata = () => {
       // Check if video is still connected and state hasn't changed
-      if (!video.isConnected || videoState === "skipped") return
+      const currentState = videoState
+      if (!video.isConnected || currentState === "skipped") return
       
       // Freeze on first frame
       video.currentTime = 0
