@@ -34,6 +34,19 @@ export function VideoHomepage() {
 
     const handleLoadedData = () => {
       setIsLoaded(true)
+      console.log("✅ Video loaded successfully")
+    }
+
+    const handleError = (e: Event) => {
+      const video = e.target as HTMLVideoElement
+      console.error("❌ Video error:", {
+        error: video.error,
+        code: video.error?.code,
+        message: video.error?.message,
+        networkState: video.networkState,
+        readyState: video.readyState,
+        src: video.src,
+      })
     }
 
     const handleEnded = () => {
@@ -51,7 +64,7 @@ export function VideoHomepage() {
         setShowingRecentWork(false)
         setRecentWorkEnded(false)
         setHasTriggeredEarlyEnd(false)
-        video.src = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4"
+        video.src = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%204K.mp4"
         video.load()
         video.addEventListener(
           "loadeddata",
@@ -80,11 +93,13 @@ export function VideoHomepage() {
     }
 
     video.addEventListener("loadeddata", handleLoadedData)
+    video.addEventListener("error", handleError)
     video.addEventListener("ended", handleEnded)
     video.addEventListener("timeupdate", handleTimeUpdate)
 
     return () => {
       video.removeEventListener("loadeddata", handleLoadedData)
+      video.removeEventListener("error", handleError)
       video.removeEventListener("ended", handleEnded)
       video.removeEventListener("timeupdate", handleTimeUpdate)
     }
@@ -262,7 +277,7 @@ export function VideoHomepage() {
         playsInline
         muted
       >
-        <source src="https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%25204K.mp4" type="video/mp4" />
+        <source src="https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/A_cinematic__Blender_style_animated_sequence_inside_a_handcrafted_miniature_world__The_scene_begins_%204K.mp4" type="video/mp4" />
       </video>
 
       <video
