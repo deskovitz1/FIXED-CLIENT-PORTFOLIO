@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 // Intro video URL is configured in app/config/intro.ts
 // To change the intro video, update INTRO_VIDEO_URL in that file
@@ -11,6 +11,14 @@ export default function IntroLanding() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const router = useRouter()
 
+  // Set video playback speed to 1.25x (25% faster) when video loads
+  useEffect(() => {
+    const video = videoRef.current
+    if (video) {
+      video.playbackRate = 1.25
+    }
+  }, [])
+
   const handleEnter = () => {
     // prevent double-click spam
     if (started) return
@@ -18,6 +26,9 @@ export default function IntroLanding() {
 
     const video = videoRef.current
     if (!video) return
+
+    // Ensure playback rate is set to 1.25x before playing
+    video.playbackRate = 1.25
 
     video.play().catch((err: any) => {
       if (err?.name === "AbortError") {
@@ -42,6 +53,10 @@ export default function IntroLanding() {
         playsInline
         muted={true}
         controls={false}
+        onLoadedMetadata={(e) => {
+          // Set playback speed to 1.25x (25% faster) when video metadata loads
+          e.currentTarget.playbackRate = 1.25
+        }}
         // IMPORTANT: no loop, no autoPlay
       />
 
