@@ -65,6 +65,7 @@ export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPl
           src={url}
           controls
           autoPlay
+          muted
           playsInline
           className="w-full h-full"
           style={{ width: "100%", height: "100%", objectFit: "contain" }}
