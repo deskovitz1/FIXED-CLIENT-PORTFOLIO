@@ -22,7 +22,7 @@ function MenuButton({
   return (
     <button
       onClick={handleClick}
-      className="px-8 py-4 border border-white/30 rounded-lg text-base font-light tracking-[0.1em] hover:bg-white hover:text-black transition-all duration-300 hover:border-white"
+      className="px-8 py-4 border border-red-600 rounded-lg text-base font-light tracking-[0.1em] text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300"
     >
       {label}
     </button>
@@ -31,8 +31,8 @@ function MenuButton({
 
 export default function MainMenuPage() {
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-12">
-      <h1 className="text-2xl font-bold opacity-90" style={{ fontFamily: 'Helvetica, Arial, sans-serif', letterSpacing: '-0.06em' }}>CIRCUS17</h1>
+    <main className="min-h-screen bg-white flex flex-col items-center justify-center gap-12">
+      <h1 className="text-2xl font-bold text-red-600" style={{ fontFamily: 'Helvetica, Arial, sans-serif', letterSpacing: '-0.06em' }}>CIRCUS17</h1>
       <div className="flex flex-col gap-4">
         <MenuButton label="Recent Work" category="recent-work" />
         <MenuButton label="Music" category="music-video" />
