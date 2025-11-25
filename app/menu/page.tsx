@@ -22,7 +22,8 @@ function MenuButton({
   return (
     <button
       onClick={handleClick}
-      className="px-8 py-4 border border-red-600 rounded-lg text-base font-light tracking-[0.1em] text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300"
+      className="px-8 py-4 border border-red-600 rounded-lg text-base font-bold text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300"
+      style={{ fontFamily: 'Helvetica, Arial, sans-serif', letterSpacing: '-0.06em' }}
     >
       {label}
     </button>
