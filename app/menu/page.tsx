@@ -1,35 +1,44 @@
-// app/menu/page.tsx
+"use client"
 
-import Link from "next/link";
+import { useRouter } from "next/navigation"
 
-function MenuButton({ label, href }: { label: string; href: string }) {
+function MenuButton({ 
+  label, 
+  category 
+}: { 
+  label: string
+  category?: string 
+}) {
+  const router = useRouter()
+
+  const handleClick = () => {
+    if (category) {
+      router.push(`/videos?category=${encodeURIComponent(category)}`)
+    } else {
+      router.push("/videos")
+    }
+  }
+
   return (
-    <Link
-      href={href}
-      className="px-6 py-3 border border-white/40 rounded-full text-lg hover:bg-white hover:text-black transition"
+    <button
+      onClick={handleClick}
+      className="px-8 py-4 border border-white/30 rounded-lg text-base font-light tracking-[0.1em] hover:bg-white hover:text-black transition-all duration-300 hover:border-white"
     >
       {label}
-    </Link>
-  );
+    </button>
+  )
 }
 
 export default function MainMenuPage() {
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-8">
-      <h1 className="text-3xl font-semibold tracking-[0.3em]">CIRCUS17</h1>
-      <div className="flex flex-wrap justify-center gap-4">
-        {/*
-          IMPORTANT:
-          Replace "/videos" below with the REAL route where your actual videos page exists.
-          If your working page is /videos, keep it.
-          If it is something else (like /circus, /portfolio, /allvideos), change it.
-        */}
-        <MenuButton label="Recent Videos" href="/videos" />
-        <MenuButton label="Launch Videos" href="/videos" />
-        <MenuButton label="Music" href="/videos" />
-        <MenuButton label="Clothing" href="/videos" />
-        <MenuButton label="Narrative" href="/videos" />
+    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-12">
+      <h1 className="text-2xl font-bold opacity-90" style={{ fontFamily: 'Helvetica, Arial, sans-serif', letterSpacing: '-60px' }}>CIRCUS17</h1>
+      <div className="flex flex-col gap-4">
+        <MenuButton label="Recent Work" category="recent-work" />
+        <MenuButton label="Music" category="music-video" />
+        <MenuButton label="Launch Videos" category="industry-work" />
+        <MenuButton label="Clothing" category="clothing" />
       </div>
     </main>
-  );
+  )
 }
