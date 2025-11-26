@@ -132,3 +132,4 @@ vercel env pull .env.local
 **Remember**: All credentials are managed through environment variables. Never hardcode tokens or connection strings in your code!
 
 
+

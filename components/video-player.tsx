@@ -24,20 +24,20 @@ export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPl
 
   if (!url) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: '#F8F2ED' }}>
         <div className="relative w-full max-w-7xl aspect-video bg-black flex items-center justify-center">
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+            className="absolute top-4 right-4 z-50 text-gray-900 hover:bg-gray-200"
           >
             <X className="h-6 w-6" />
           </Button>
           <div className="text-red-500 p-4 text-center">
             <p className="text-lg mb-2">No video URL available for this video.</p>
             {video && (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600">
                 video.video_url: {video.video_url || "null"}
                 <br />
                 video.blob_url: {video.blob_url || "null"}
@@ -56,7 +56,7 @@ export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPl
           onClick={onClose}
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+          className="absolute top-4 right-4 z-50 text-gray-900 hover:bg-gray-200"
         >
           <X className="h-6 w-6" />
         </Button>
@@ -100,7 +100,7 @@ export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPl
         
         {title && (
           <div className="absolute bottom-4 left-4 right-4">
-            <h3 className="text-white text-lg font-light">{title}</h3>
+            <h3 className="text-gray-900 text-lg font-light">{title}</h3>
           </div>
         )}
       </div>

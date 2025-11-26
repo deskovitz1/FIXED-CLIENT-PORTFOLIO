@@ -93,3 +93,4 @@ export function MainMenu({ onCategoryClick, onAllVideosClick }: MainMenuProps) {
   )
 }
 
+

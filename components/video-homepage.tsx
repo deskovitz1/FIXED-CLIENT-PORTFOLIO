@@ -129,7 +129,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
         try {
           videoEl.pause()
           videoEl.currentTime = 0
-        } catch (error) {
+    } catch (error) {
           // Ignore pause errors
         }
       }
@@ -187,7 +187,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
 
   // Show video grid directly (skip intro/menu logic)
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white relative">
+    <div className="min-h-screen text-gray-900 relative" style={{ backgroundColor: '#F8F2ED' }}>
       {/* Debug Panel Toggle */}
       <button
         onClick={() => setShowDebug(!showDebug)}
@@ -246,15 +246,15 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                   )}
                 </div>
               ))
-            )}
-          </div>
+                    )}
+                  </div>
           <div className="p-2 border-t border-gray-700 flex gap-2">
             <button
               onClick={() => setDebugLogs([])}
               className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded"
             >
               Clear
-            </button>
+                </button>
             <div className="flex-1 text-xs text-gray-400 flex items-center justify-end">
               {debugLogs.length} logs
             </div>
@@ -263,12 +263,12 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#272727] px-4 md:px-6">
+      <header className="sticky top-0 z-50 border-b px-4 md:px-6" style={{ backgroundColor: '#F8F2ED', borderColor: '#FFE4D6' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
           <div className="flex items-center gap-6">
             <a
               href="/"
-              className="text-xl font-bold hover:opacity-70 transition-opacity"
+              className="text-xl font-bold text-gray-900 hover:opacity-70 transition-opacity"
             >
               CIRCUS17
             </a>
@@ -277,9 +277,10 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                 href="/videos"
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedCategory === null
-                    ? "bg-white text-black"
-                    : "hover:bg-[#272727]"
+                    ? "text-white"
+                    : "text-gray-700 hover:opacity-80"
                 }`}
+                style={selectedCategory === null ? { backgroundColor: '#FF9F9F' } : {}}
               >
                 All
               </a>
@@ -287,9 +288,10 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                 href="/videos?category=recent-work"
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedCategory === "recent-work"
-                    ? "bg-white text-black"
-                    : "hover:bg-[#272727]"
+                    ? "text-white"
+                    : "text-gray-700 hover:opacity-80"
                 }`}
+                style={selectedCategory === "recent-work" ? { backgroundColor: '#FFB88C' } : {}}
               >
                 Recent Work
               </a>
@@ -297,9 +299,10 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                 href="/videos?category=music-video"
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedCategory === "music-video"
-                    ? "bg-white text-black"
-                    : "hover:bg-[#272727]"
+                    ? "text-white"
+                    : "text-gray-700 hover:opacity-80"
                 }`}
+                style={selectedCategory === "music-video" ? { backgroundColor: '#FFCC99' } : {}}
               >
                 Music
               </a>
@@ -307,9 +310,10 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                 href="/videos?category=industry-work"
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedCategory === "industry-work"
-                    ? "bg-white text-black"
-                    : "hover:bg-[#272727]"
+                    ? "text-white"
+                    : "text-gray-700 hover:opacity-80"
                 }`}
+                style={selectedCategory === "industry-work" ? { backgroundColor: '#FFA07A' } : {}}
               >
                 Launch Videos
               </a>
@@ -317,9 +321,10 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                 href="/videos?category=clothing"
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedCategory === "clothing"
-                    ? "bg-white text-black"
-                    : "hover:bg-[#272727]"
+                    ? "text-white"
+                    : "text-gray-700 hover:opacity-80"
                 }`}
+                style={selectedCategory === "clothing" ? { backgroundColor: '#FFB6C1' } : {}}
               >
                 Clothing
               </a>
@@ -327,7 +332,8 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
           </div>
           <a
             href="/admin"
-            className="px-4 py-2 text-sm bg-[#272727] hover:bg-[#3f3f3f] rounded-full transition-colors"
+            className="px-4 py-2 text-sm text-gray-700 rounded-full transition-colors hover:opacity-80"
+            style={{ backgroundColor: '#FFD4B3' }}
           >
             Admin
           </a>
@@ -340,21 +346,22 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="inline-block animate-spin text-4xl mb-4">🎪</div>
-              <p className="text-gray-400">Loading videos...</p>
+              <p className="text-gray-600">Loading videos...</p>
             </div>
           </div>
         ) : videos.length === 0 ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <p className="text-xl text-gray-400 mb-2">No videos found</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xl text-gray-600 mb-2">No videos found</p>
+              <p className="text-sm text-gray-700">
                 {selectedCategory 
                   ? `No videos in "${selectedCategory}" category`
                   : "Upload videos in the admin panel"}
               </p>
               <a
                 href="/admin"
-                className="inline-block mt-4 px-4 py-2 text-sm bg-[#272727] hover:bg-[#3f3f3f] rounded-full transition-colors"
+                className="inline-block mt-4 px-4 py-2 text-sm text-gray-700 rounded-full transition-colors hover:opacity-80"
+                style={{ backgroundColor: '#FFD4B3' }}
               >
                 Go to Admin
               </a>
@@ -370,7 +377,9 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                   onClick={() => handleVideoClick(featuredVideo)}
                 >
                   {/* Featured Video Thumbnail */}
-                  <div className="relative aspect-video bg-[#181818] rounded-lg overflow-hidden mb-4">
+                  <div className="relative aspect-video rounded-lg overflow-hidden mb-4"
+                       style={{ backgroundColor: '#FFF5E6' }}
+                  >
                     {(() => {
                       const videoUrl = featuredVideo.video_url || featuredVideo.blob_url
                       return videoUrl ? (
@@ -476,12 +485,16 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
 
                   {/* Featured Video Info */}
                   <div>
-                    <h2 className="font-semibold text-lg mb-2 group-hover:text-blue-400 transition-colors">
+                    <h2 className="font-semibold text-lg mb-2 transition-colors group-hover:text-[#FF8C69]"
+                        style={{ color: '#B85C38' }}
+                    >
                       {featuredVideo.title}
                     </h2>
-                    <div className="flex items-center gap-3 text-sm text-gray-400 mb-2">
+                    <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
                       {featuredVideo.category && (
-                        <span className="px-3 py-1 bg-[#272727] rounded-full">
+                        <span className="px-3 py-1 text-gray-700 rounded-full"
+                              style={{ backgroundColor: '#FFE4D6' }}
+                        >
                           {featuredVideo.category}
                         </span>
                       )}
@@ -491,14 +504,14 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                       </span>
                     </div>
                     {featuredVideo.description && (
-                      <p className="text-sm text-gray-300 line-clamp-3">
+                      <p className="text-sm text-gray-700 line-clamp-3">
                         {featuredVideo.description}
                       </p>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+        </div>
+      )}
 
             {/* Sidebar Videos (Right Side - Smaller, Vertical) */}
             <div className="lg:w-[30%] space-y-3">
@@ -517,7 +530,9 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                       }}
                     >
                       {/* Sidebar Video Thumbnail */}
-                      <div className="relative w-40 h-24 flex-shrink-0 bg-[#181818] rounded-lg overflow-hidden">
+                      <div className="relative w-40 h-24 flex-shrink-0 rounded-lg overflow-hidden"
+                           style={{ backgroundColor: '#FFF5E6' }}
+                      >
                         {videoUrl ? (
                           <video
                             ref={(el) => {
@@ -598,9 +613,11 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                         <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
                           {video.title}
                         </h3>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
                           {video.category && (
-                            <span className="px-1.5 py-0.5 bg-[#272727] rounded text-[10px]">
+                            <span className="px-1.5 py-0.5 text-gray-700 rounded text-[10px]"
+                                  style={{ backgroundColor: '#FFE4D6' }}
+                            >
                               {video.category}
                             </span>
                           )}
@@ -614,8 +631,8 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                   )
                 })}
             </div>
-          </div>
-        )}
+        </div>
+      )}
       </main>
 
       {/* Video Player Modal */}
