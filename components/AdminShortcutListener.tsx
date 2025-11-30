@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 
 export function AdminShortcutListener() {
-  const { isAdmin, setIsAdmin } = useAdmin();
+  const { setIsAdmin } = useAdmin();
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -19,33 +19,32 @@ export function AdminShortcutListener() {
 
       if (!isCmdShiftC && !isCtrlShiftC) return;
 
-      if (!isAdmin) {
-        const password = window.prompt('Enter admin password');
-        if (!password) return;
+      // Always prompt for password (no check for isAdmin)
+      const password = window.prompt('Enter admin password');
+      if (!password) return;
 
-        fetch('/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password }),
+      fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || 'Admin login failed');
+            return;
+          }
+          setIsAdmin(true);
+          alert('Admin mode enabled');
         })
-          .then(async (res) => {
-            if (!res.ok) {
-              const err = await res.json().catch(() => ({}));
-              alert(err.error || 'Admin login failed');
-              return;
-            }
-            setIsAdmin(true);
-            alert('Admin mode enabled');
-          })
-          .catch(() => {
-            alert('Network error during admin login');
-          });
-      }
+        .catch(() => {
+          alert('Network error during admin login');
+        });
     }
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isAdmin, setIsAdmin]);
+  }, [setIsAdmin]);
 
   return null;
 }

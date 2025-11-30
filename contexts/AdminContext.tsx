@@ -18,14 +18,9 @@ export function useAdmin() {
 }
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
+  // Always start in regular view mode (isAdmin = false)
+  // User must re-enter password each time via keyboard shortcut
   const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/admin/me')
-      .then((r) => r.json())
-      .then((d) => setIsAdmin(Boolean(d.admin)))
-      .catch(() => {});
-  }, []);
 
   return (
     <AdminContext.Provider value={{ isAdmin, setIsAdmin }}>
