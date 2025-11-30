@@ -743,7 +743,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
       }
     } finally {
       setUploading(false)
-      uploadXhrRef.current = null
+      uploadAbortControllerRef.current = null
       uploadStartTimeRef.current = null
     }
   }

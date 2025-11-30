@@ -343,39 +343,42 @@ export async function updateVideo(
       }
     }
 
-    // Fetch the updated video to ensure we have all fields
+    // Fetch the updated video - use raw SQL to avoid schema issues
     let updatedVideo;
     try {
+      // Try Prisma first
       updatedVideo = await prisma.video.findUnique({
         where: { id },
       });
     } catch (fetchError: any) {
-      // If Prisma fails to fetch (e.g., due to missing columns), use raw SQL
-      const fetchErrorMsg = fetchError?.message?.toLowerCase() || String(fetchError).toLowerCase();
-      if (fetchErrorMsg.includes("column") || fetchErrorMsg.includes("does not exist")) {
-        console.warn("Prisma findUnique failed, using raw SQL to fetch video");
-        const rawResults = await prisma.$queryRawUnsafe<Array<any>>(
-          `SELECT * FROM videos WHERE id = $1`,
-          id
-        );
-        if (!rawResults || rawResults.length === 0) {
-          console.error(`Video ${id} not found after update`);
-          return null;
-        }
-        updatedVideo = rawResults[0];
-      } else {
-        throw fetchError;
+      // If Prisma fails, use raw SQL (simpler and more reliable)
+      console.warn("Prisma findUnique failed, using raw SQL");
+      const rawResults = await prisma.$queryRawUnsafe<Array<any>>(
+        `SELECT id, title, description, category, video_url, thumbnail_url, blob_url, file_name, file_size, duration, display_date, is_visible, created_at, updated_at FROM videos WHERE id = $1`,
+        id
+      );
+      if (!rawResults || rawResults.length === 0) {
+        return null;
       }
+      updatedVideo = rawResults[0];
     }
 
     if (!updatedVideo) {
-      console.error(`Video ${id} not found after update`);
       return null;
     }
 
+    // Normalize the response to match Video interface
     return {
-      ...updatedVideo,
+      id: updatedVideo.id,
+      title: updatedVideo.title,
+      description: updatedVideo.description,
+      category: updatedVideo.category,
+      video_url: updatedVideo.video_url,
+      thumbnail_url: updatedVideo.thumbnail_url,
+      blob_url: updatedVideo.blob_url,
+      file_name: updatedVideo.file_name,
       file_size: updatedVideo.file_size ? Number(updatedVideo.file_size) : null,
+      duration: updatedVideo.duration || null,
       display_date: updatedVideo.display_date ? (typeof updatedVideo.display_date === 'string' ? updatedVideo.display_date : updatedVideo.display_date.toISOString()) : null,
       is_visible: updatedVideo.is_visible !== null && updatedVideo.is_visible !== undefined ? Boolean(updatedVideo.is_visible) : true,
       created_at: updatedVideo.created_at ? (typeof updatedVideo.created_at === 'string' ? updatedVideo.created_at : updatedVideo.created_at.toISOString()) : new Date().toISOString(),
@@ -397,18 +400,13 @@ export async function deleteVideo(id: number): Promise<boolean> {
     return true;
   } catch (error: any) {
     console.error("Error in deleteVideo:", error);
-    const errorMsg = error.message?.toLowerCase() || "";
+    const errorMsg = error?.message?.toLowerCase() || "";
     
-    // If Prisma fails due to schema mismatch (e.g., missing columns), try raw SQL
-    if (errorMsg.includes("column") || errorMsg.includes("does not exist") || errorMsg.includes("unknown argument")) {
-      console.warn("Prisma delete failed due to schema mismatch, attempting raw SQL delete.");
-      try {
-        await prisma.$executeRawUnsafe(`DELETE FROM videos WHERE id = $1`, id);
-        return true;
-      } catch (rawError) {
-        console.error("Raw SQL delete also failed:", rawError);
-        throw rawError;
-      }
+    // If Prisma fails, use raw SQL (simpler and more reliable)
+    if (errorMsg.includes("column") || errorMsg.includes("does not exist") || errorMsg.includes("unknown argument") || error?.code === 'P2022') {
+      console.warn("Prisma delete failed, using raw SQL delete");
+      const result = await prisma.$executeRawUnsafe(`DELETE FROM videos WHERE id = $1`, id);
+      return true; // Raw SQL delete succeeded
     }
     
     // Re-throw other errors
