@@ -287,6 +287,7 @@ interface VideoItemProps {
 }
 
 function VideoItem({ video, onChanged, onSelect, videoRefs, onVideoLoad, onVideoError, formatDate }: VideoItemProps) {
+  const { isAdmin } = useAdmin()
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(video.title)
   const [description, setDescription] = useState(video.description ?? '')
