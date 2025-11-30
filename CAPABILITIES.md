@@ -2,6 +2,10 @@
 
 This document lists all core capabilities that must be maintained regardless of other changes.
 
+## ⚠️ **IMPORTANT: Working Upload Version**
+**If upload breaks, restore from commit `459c2ed`**  
+See `UPLOAD_WORKING_VERSION.md` for detailed restoration instructions.
+
 ## ✅ Video Upload System
 - **Location**: `components/video-homepage.tsx` - `handleAddVideo` function
 - **API Routes**: 
