@@ -1,13 +1,22 @@
 # 🔐 Vercel Environment Variables Setup
 
+## ⚠️ **CRITICAL: "Server misconfigured" Error**
+
+If you see **"Server misconfigured"** when trying to use admin mode (`Cmd+Shift+A`), it means `ADMIN_PASSWORD` is **NOT SET** in Vercel environment variables.
+
+**Fix**: Add `ADMIN_PASSWORD` to Vercel (see below) and **redeploy**.
+
+---
+
 ## Required Environment Variables
 
 Copy these into **Vercel Dashboard → Your Project → Settings → Environment Variables**:
 
-### 1. Admin Password
+### 1. Admin Password ⚠️ REQUIRED FOR ADMIN MODE
 ```
 ADMIN_PASSWORD=welcometothecircus
 ```
+**Without this, admin mode will show "Server misconfigured" error**
 
 ### 2. Blob Storage Token
 ```
