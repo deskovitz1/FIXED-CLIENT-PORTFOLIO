@@ -29,6 +29,7 @@ interface FeaturedVideoItemProps {
 }
 
 function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoLoad, onVideoError, formatDate }: FeaturedVideoItemProps) {
+  const { isAdmin } = useAdmin()
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(video.title)
   const [description, setDescription] = useState(video.description ?? '')
