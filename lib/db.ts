@@ -187,59 +187,71 @@ export async function createVideo(data: {
   display_date?: string;
 }): Promise<Video> {
   try {
-    const createData: any = {
-      title: data.title,
-      description: data.description || null,
-      category: data.category || null,
-      video_url: data.video_url,
-      thumbnail_url: data.thumbnail_url || null,
-      blob_url: data.blob_url,
-      file_name: data.file_name,
-      file_size: data.file_size ? BigInt(data.file_size) : null,
-      duration: data.duration || null,
-    };
+    console.log(`[createVideo] Creating video:`, { title: data.title, file_name: data.file_name });
     
-    // Try to include display_date, but if the column doesn't exist, retry without it
-    if (data.display_date !== undefined) {
-      createData.display_date = data.display_date ? new Date(data.display_date) : null;
+    // Use raw SQL directly - more reliable and avoids Prisma schema issues
+    const columns: string[] = ['title', 'description', 'category', 'video_url', 'thumbnail_url', 'blob_url', 'file_name', 'file_size', 'duration', 'created_at', 'updated_at'];
+    const values: any[] = [];
+    let paramIndex = 1;
+    
+    // Build INSERT query with only basic fields that should always exist
+    values.push(data.title); // $1
+    values.push(data.description || null); // $2
+    values.push(data.category || null); // $3
+    values.push(data.video_url); // $4
+    values.push(data.thumbnail_url || null); // $5
+    values.push(data.blob_url); // $6
+    values.push(data.file_name); // $7
+    values.push(data.file_size || null); // $8
+    values.push(data.duration || null); // $9
+    values.push(new Date()); // $10 - created_at
+    values.push(new Date()); // $11 - updated_at
+    
+    // Execute INSERT query
+    const query = `INSERT INTO videos (${columns.join(', ')}) VALUES (${columns.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING *`;
+    console.log(`[createVideo] SQL: ${query}`);
+    console.log(`[createVideo] Values:`, values);
+    
+    const insertResults = await prisma.$queryRawUnsafe<Array<any>>(query, ...values) as any[];
+    
+    if (!insertResults || insertResults.length === 0) {
+      throw new Error("Failed to create video - no result returned");
     }
     
-    const video = await prisma.video.create({
-      data: createData,
-    });
+    const video = insertResults[0];
+    console.log(`[createVideo] Video created successfully with ID: ${video.id}`);
     
+    // Fetch the complete video using raw SQL to get all fields
+    const fetchQuery = `SELECT * FROM videos WHERE id = $1`;
+    const fetchResults = await prisma.$queryRawUnsafe<Array<any>>(fetchQuery, video.id) as any[];
+    
+    if (!fetchResults || fetchResults.length === 0) {
+      throw new Error("Failed to fetch created video");
+    }
+    
+    const createdVideo = fetchResults[0];
+    
+    // Normalize the response to match Video interface
     return {
-      ...video,
-      file_size: video.file_size ? Number(video.file_size) : null,
-      display_date: video.display_date ? video.display_date.toISOString() : null,
+      id: createdVideo.id,
+      title: createdVideo.title,
+      description: createdVideo.description,
+      category: createdVideo.category,
+      video_url: createdVideo.video_url,
+      thumbnail_url: createdVideo.thumbnail_url,
+      blob_url: createdVideo.blob_url,
+      file_name: createdVideo.file_name,
+      file_size: createdVideo.file_size ? Number(createdVideo.file_size) : null,
+      duration: createdVideo.duration || null,
+      display_date: createdVideo.display_date ? (typeof createdVideo.display_date === 'string' ? createdVideo.display_date : createdVideo.display_date.toISOString()) : null,
+      is_visible: createdVideo.is_visible !== null && createdVideo.is_visible !== undefined ? Boolean(createdVideo.is_visible) : true,
+      created_at: createdVideo.created_at ? (typeof createdVideo.created_at === 'string' ? createdVideo.created_at : createdVideo.created_at.toISOString()) : new Date().toISOString(),
+      updated_at: createdVideo.updated_at ? (typeof createdVideo.updated_at === 'string' ? createdVideo.updated_at : createdVideo.updated_at.toISOString()) : new Date().toISOString(),
     } as Video;
   } catch (error) {
-    console.error("Error in createVideo:", error);
-    // If display_date is the issue, retry without it
-    if (error instanceof Error && error.message.includes("display_date") && data.display_date !== undefined) {
-      console.warn("display_date column may not exist, retrying without it...");
-      const createDataWithoutDate = {
-        title: data.title,
-        description: data.description || null,
-        category: data.category || null,
-        video_url: data.video_url,
-        thumbnail_url: data.thumbnail_url || null,
-        blob_url: data.blob_url,
-        file_name: data.file_name,
-        file_size: data.file_size ? BigInt(data.file_size) : null,
-        duration: data.duration || null,
-      };
-      
-      const video = await prisma.video.create({
-        data: createDataWithoutDate,
-      });
-      
-      return {
-        ...video,
-        file_size: video.file_size ? Number(video.file_size) : null,
-        display_date: null,
-      } as Video;
-    }
+    console.error("[createVideo] Error:", error);
+    console.error("[createVideo] Error message:", error instanceof Error ? error.message : String(error));
+    console.error("[createVideo] Error stack:", error instanceof Error ? error.stack : "No stack");
     throw error;
   }
 }
