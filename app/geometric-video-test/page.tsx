@@ -16,6 +16,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Video } from "@/lib/db";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TileShape = {
   clipPath: string;
@@ -66,6 +67,7 @@ const TILE_SHAPES: TileShape[] = [
 ];
 
 export default function GeometricVideoTestPage() {
+  const isMobile = useIsMobile();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -108,27 +110,27 @@ export default function GeometricVideoTestPage() {
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-[#0B0B1A] via-[#1A1024] to-[#3A0712] text-white flex flex-col">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+      <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-white/10">
         <button
           type="button"
           onClick={handleBackToMenu}
-          className="text-sm uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors"
+          className="text-xs sm:text-sm uppercase tracking-[0.15em] sm:tracking-[0.2em] text-white/70 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           ← Menu
         </button>
         <div className="text-center flex-1">
-          <p className="text-[11px] uppercase tracking-[0.4em] text-white/40 mb-1">
+          <p className="text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.4em] text-white/40 mb-1">
             Geometric Video Test
           </p>
-          <h1 className="text-lg md:text-xl font-semibold tracking-[0.3em] text-white/80">
+          <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold tracking-[0.2em] sm:tracking-[0.3em] text-white/80">
             CIRCUS · GRID
           </h1>
         </div>
-        <div className="w-20 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        <div className="w-12 sm:w-16 md:w-20 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
       </header>
 
       {/* Mosaic area */}
-      <section className="relative flex-1 overflow-hidden px-4 py-4 md:px-8 md:py-6">
+      <section className="relative flex-1 overflow-hidden px-2 sm:px-3 md:px-4 lg:px-8 py-3 sm:py-4 md:py-6">
         {/* Subtle background stripes */}
         <div className="pointer-events-none absolute inset-0 opacity-20 mix-blend-soft-light">
           <div className="w-full h-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_60%),repeating-linear-gradient(135deg,_rgba(255,255,255,0.05)_0,_rgba(255,255,255,0.05)_2px,_transparent_2px,_transparent_8px)]" />
@@ -154,9 +156,9 @@ export default function GeometricVideoTestPage() {
           </div>
         ) : (
           <div
-            className="relative h-full w-full grid gap-3 md:gap-4 lg:gap-5"
+            className="relative h-full w-full grid gap-2 sm:gap-3 md:gap-4 lg:gap-5"
             style={{
-              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+              gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))",
             }}
           >
             {videos.map((video, index) => {
@@ -173,10 +175,10 @@ export default function GeometricVideoTestPage() {
                   onClick={() => handleTileClick(video)}
                   disabled={!hasUrl}
                   className={[
-                    "group relative overflow-hidden rounded-[18px] border border-white/8 bg-black/30 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_16px_40px_rgba(0,0,0,0.7)] transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_24px_60px_rgba(0,0,0,0.9)] cursor-pointer disabled:cursor-default disabled:opacity-50",
-                    "col-span-2 row-span-1 sm:col-span-2 md:col-span-1", // sensible defaults
-                    colSpanClass,
-                    rowSpanClass,
+                    "group relative overflow-hidden rounded-[12px] sm:rounded-[16px] md:rounded-[18px] border border-white/8 bg-black/30 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_16px_40px_rgba(0,0,0,0.7)] transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_24px_60px_rgba(0,0,0,0.9)] cursor-pointer disabled:cursor-default disabled:opacity-50 min-h-[120px] sm:min-h-[150px]",
+                    isMobile ? "col-span-1 row-span-1" : "col-span-2 row-span-1 sm:col-span-2 md:col-span-1", // Mobile: single column, Desktop: responsive
+                    !isMobile && colSpanClass,
+                    !isMobile && rowSpanClass,
                   ].join(" ")}
                   style={{
                     WebkitClipPath: shape.clipPath,

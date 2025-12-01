@@ -6,6 +6,7 @@ import { VideoPlayer } from "@/components/video-player"
 import { Play, Calendar, Bug, X, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload } from "lucide-react"
 import { upload } from '@vercel/blob/client'
 import { useAdmin } from "@/contexts/AdminContext"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface DebugLog {
   timestamp: string
@@ -30,6 +31,7 @@ interface FeaturedVideoItemProps {
 
 function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoLoad, onVideoError, formatDate }: FeaturedVideoItemProps) {
   const { isAdmin } = useAdmin()
+  const isMobile = useIsMobile()
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(video.title)
   const [description, setDescription] = useState(video.description ?? '')
@@ -134,12 +136,13 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
   }
 
   return (
-    <div className="flex-1 lg:max-w-[70%]">
+    <div className="flex-1 w-full lg:max-w-[70%]">
       <div
         className="group cursor-pointer relative"
         onClick={onVideoClick}
         onMouseEnter={() => setShowActions(true)}
         onMouseLeave={() => setShowActions(false)}
+        onTouchStart={() => setShowActions(true)}
       >
         {/* Featured Video Thumbnail */}
         <div className="relative aspect-video rounded-lg overflow-hidden mb-4 bg-black">
@@ -156,7 +159,7 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
                 src={videoUrl}
                 poster={video.thumbnail_url || undefined}
                 className="w-full h-full object-cover"
-                preload="auto"
+                preload={isMobile ? "metadata" : "auto"}
                 muted
                 playsInline
                 onLoadedMetadata={(e) => onVideoLoad(video.id, e)}
@@ -164,6 +167,13 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
                 onWaiting={() => setIsLoading(true)}
                 onCanPlay={() => setIsLoading(false)}
                 onPlaying={() => setIsLoading(false)}
+                onTouchStart={(e) => {
+                  // Mobile: Start loading on touch
+                  const videoEl = e.currentTarget
+                  if (videoEl.readyState < 2) {
+                    videoEl.load()
+                  }
+                }}
                 onMouseEnter={async (e) => {
                   const videoEl = e.currentTarget
                   if (!videoEl.isConnected) return
@@ -310,6 +320,7 @@ interface VideoItemProps {
 
 function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideoLoad, onVideoError, formatDate }: VideoItemProps) {
   const { isAdmin } = useAdmin()
+  const isMobile = useIsMobile()
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(video.title)
   const [description, setDescription] = useState(video.description ?? '')
@@ -441,7 +452,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
               src={videoUrl}
               poster={video.thumbnail_url || undefined}
               className="w-full h-full object-cover"
-              preload="metadata"
+              preload={isMobile ? "none" : "metadata"}
               muted
               playsInline
               onLoadedMetadata={(e) => onVideoLoad(video.id, e)}
@@ -449,6 +460,13 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
               onWaiting={() => setIsLoading(true)}
               onCanPlay={() => setIsLoading(false)}
               onPlaying={() => setIsLoading(false)}
+              onTouchStart={(e) => {
+                // Mobile: Start loading on touch
+                const videoEl = e.currentTarget
+                if (videoEl.readyState < 2) {
+                  videoEl.load()
+                }
+              }}
               onMouseEnter={async (e) => {
                 const videoEl = e.currentTarget
                 if (!videoEl.isConnected) return
@@ -575,6 +593,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
 
 export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   const { isAdmin } = useAdmin()
+  const isMobile = useIsMobile()
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)

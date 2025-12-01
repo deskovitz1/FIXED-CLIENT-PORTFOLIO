@@ -21,6 +21,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Video } from "@/lib/db";
 import { useRouter } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Fixed number of visual slices around the wheel
 const SLICE_COUNT = 50;
@@ -75,6 +76,7 @@ function createSliceClipPath(startAngle: number, endAngle: number, steps: number
 }
 
 export default function MainMenuPage() {
+  const isMobile = useIsMobile();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -292,7 +294,7 @@ export default function MainMenuPage() {
   }, [isSpinning, selectedVideoIndex, videos]);
 
   return (
-    <main className="circle-test-page min-h-screen w-full flex flex-col items-center justify-between bg-white text-black px-6 md:px-8 py-6 md:py-10 relative overflow-hidden">
+    <main className="circle-test-page min-h-screen w-full flex flex-col items-center justify-between bg-white text-black px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 relative overflow-hidden">
       {/* Casino-style lights around the perimeter */}
       <div className="circus-lights-container absolute inset-0 pointer-events-none z-0">
         {/* Top row */}
@@ -345,8 +347,8 @@ export default function MainMenuPage() {
       </div>
 
       {/* Top navigation - centered */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-center mb-8 pt-4">
-        <nav className="flex items-center gap-5 md:gap-8 text-xs md:text-sm tracking-[0.25em] uppercase">
+      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-center mb-4 sm:mb-6 md:mb-8 pt-2 sm:pt-3 md:pt-4">
+        <nav className="flex items-center gap-2 sm:gap-3 md:gap-5 lg:gap-8 text-[10px] sm:text-xs md:text-sm tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.25em] uppercase flex-wrap justify-center">
           <a
             href="/videos"
             className="group relative inline-flex items-center"
@@ -432,12 +434,12 @@ export default function MainMenuPage() {
           </div>
         </div>
       ) : (
-        <div className="relative z-10 sc-page w-full max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-center gap-16 md:gap-24 lg:gap-32 flex-1 py-8 md:py-12">
+        <div className="relative z-10 sc-page w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-24 xl:gap-32 flex-1 py-4 sm:py-6 md:py-8 lg:py-12">
           {/* Left side: lever + wheel in a row */}
-          <div className="sc-left flex flex-col md:flex-row items-center justify-center gap-10 md:gap-12 flex-shrink-0">
+          <div className="sc-left flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12 flex-shrink-0">
             {/* Minimal lever on the left */}
             <div
-              className={`lever-mount relative w-[140px] h-[140px] flex items-center justify-start cursor-pointer ${
+              className={`lever-mount relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[140px] md:h-[140px] flex items-center justify-start cursor-pointer min-h-[44px] min-w-[44px] ${
                 isSpinning ? "lever-mount--disabled opacity-50 cursor-not-allowed" : ""
               }`}
               onMouseDown={handleLeverPullStart}
@@ -476,10 +478,10 @@ export default function MainMenuPage() {
               <div
                 className="circle-wrapper relative rounded-full overflow-hidden border-2 border-gray-300 shadow-[0_20px_60px_rgba(15,23,42,0.25)] bg-white"
                 style={{
-                  width: "600px",
-                  height: "600px",
-                  maxWidth: "min(75vmin, 600px)",
-                  maxHeight: "min(75vmin, 600px)",
+                  width: isMobile ? "min(85vw, 400px)" : "600px",
+                  height: isMobile ? "min(85vw, 400px)" : "600px",
+                  maxWidth: isMobile ? "min(85vw, 400px)" : "min(75vmin, 600px)",
+                  maxHeight: isMobile ? "min(85vw, 400px)" : "min(75vmin, 600px)",
                   aspectRatio: "1 / 1",
                   transform: `rotate(${rotation}deg)`,
                   transition: isSpinning
@@ -549,10 +551,10 @@ export default function MainMenuPage() {
           </div>
 
           {/* Right column: CRT TV that plays the selected video */}
-          <div className="sc-right flex items-center justify-center flex-shrink-0">
-            <div className="crt-shell flex flex-col items-center gap-4">
-              <div className="crt-frame rounded-[32px] bg-[radial-gradient(circle_at_top_left,#444,#111)] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
-                <div className="crt-screen relative w-[320px] md:w-[420px] lg:w-[500px] aspect-[4/3] bg-black rounded-[20px] overflow-hidden border-[5px] border-[#222] shadow-[inset_0_0_40px_rgba(0,0,0,0.9)] flex-shrink-0">
+          <div className="sc-right flex items-center justify-center flex-shrink-0 w-full lg:w-auto">
+            <div className="crt-shell flex flex-col items-center gap-3 sm:gap-4 w-full max-w-[90vw] sm:max-w-none">
+              <div className="crt-frame rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-[radial-gradient(circle_at_top_left,#444,#111)] p-3 sm:p-4 md:p-5 lg:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)] w-full">
+                <div className={`crt-screen relative ${isMobile ? 'w-full' : 'w-[320px] md:w-[420px] lg:w-[500px]'} aspect-[4/3] bg-black rounded-[16px] sm:rounded-[18px] md:rounded-[20px] overflow-hidden border-[4px] sm:border-[5px] border-[#222] shadow-[inset_0_0_40px_rgba(0,0,0,0.9)] flex-shrink-0 mx-auto`}>
                   {activeVideo ? (
                     <video
                       key={activeVideo.id}

@@ -2,10 +2,12 @@
 
 import { useRef, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
 // Intro video URLs are configured in app/config/intro.ts
 import { SPLASH_VIDEO_URL, ENTER_VIDEO_URL } from "@/app/config/intro"
 
 export default function IntroLanding() {
+  const isMobile = useIsMobile()
   const [stage, setStage] = useState<"splash" | "door">("splash")
   const [started, setStarted] = useState(false)
   const [doorVideoReady, setDoorVideoReady] = useState(false)
@@ -155,8 +157,8 @@ export default function IntroLanding() {
           playsInline
         />
 
-        {/* Small centered video - 60% of screen size (200% bigger than original 20%) */}
-        <div className="w-[60vw] h-[60vh] max-w-[1200px] max-h-[1200px] min-w-[400px] min-h-[400px]">
+        {/* Small centered video - responsive sizing */}
+        <div className={`${isMobile ? 'w-[90vw] h-[50vh] min-w-[280px] min-h-[200px]' : 'w-[60vw] h-[60vh] max-w-[1200px] max-h-[1200px] min-w-[400px] min-h-[400px]'}`}>
           <video
             ref={splashVideoRef}
             src={SPLASH_VIDEO_URL}
@@ -187,7 +189,7 @@ export default function IntroLanding() {
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute bottom-6 right-6 px-4 py-2 text-sm border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition z-20"
+          className={`absolute ${isMobile ? 'bottom-4 right-4' : 'bottom-6 right-6'} px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition z-20 min-h-[44px] min-w-[44px] flex items-center justify-center`}
         >
           Skip intro
         </button>
@@ -247,10 +249,10 @@ export default function IntroLanding() {
         <button
           type="button"
           onClick={handleEnter}
-          className="absolute inset-0 flex items-center justify-center text-center text-white bg-black/20 z-10"
+          className="absolute inset-0 flex items-center justify-center text-center text-white bg-black/20 z-10 min-h-[44px] min-w-[44px]"
         >
-          <span className="text-sm md:text-base tracking-[0.2em] font-light opacity-90 hover:opacity-100 transition-opacity">
-            CLICK TO ENTER
+          <span className={`${isMobile ? 'text-xs' : 'text-sm md:text-base'} tracking-[0.15em] sm:tracking-[0.2em] font-light opacity-90 hover:opacity-100 transition-opacity`}>
+            {isMobile ? 'TAP TO ENTER' : 'CLICK TO ENTER'}
           </span>
         </button>
       )}
@@ -259,7 +261,7 @@ export default function IntroLanding() {
       <button
         type="button"
         onClick={handleSkip}
-        className="absolute bottom-6 right-6 px-4 py-2 text-sm border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition z-20"
+        className={`absolute ${isMobile ? 'bottom-4 right-4' : 'bottom-6 right-6'} px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition z-20 min-h-[44px] min-w-[44px] flex items-center justify-center`}
       >
         Skip intro
       </button>

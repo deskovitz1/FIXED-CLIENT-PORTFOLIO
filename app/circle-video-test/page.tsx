@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Letter {
   char: string
@@ -224,6 +225,7 @@ function MenuButton({
 
 export default function OldMenuPage() {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [follower1, setFollower1] = useState({ x: 0, y: 0 })
   const [follower2, setFollower2] = useState({ x: 0, y: 0 })
@@ -659,7 +661,7 @@ export default function OldMenuPage() {
 
   return (
     <main 
-      className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden" 
+      className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 relative overflow-hidden" 
       style={{ backgroundColor: '#F8F2ED' }}
       onClick={handleBackgroundClick}
     >
@@ -735,18 +737,18 @@ export default function OldMenuPage() {
           <MenuButton label="Launch Videos" category="industry-work" />
           <MenuButton label="Clothing" category="clothing" />
           {/* Link back to main menu (circle test) */}
-          <div className="mt-4 flex flex-col items-center gap-1 text-[10px] uppercase tracking-[0.3em]">
+          <div className="mt-4 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.3em]">
             <button
               type="button"
               onClick={() => router.push("/menu")}
-              className="text-red-500 hover:text-red-700 transition-colors"
+              className="text-red-500 hover:text-red-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center px-2"
             >
               Back to Main Menu
             </button>
             <button
               type="button"
               onClick={() => router.push("/geometric-video-test")}
-              className="text-red-400 hover:text-red-700 transition-colors"
+              className="text-red-400 hover:text-red-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center px-2"
             >
               Geometric Test
             </button>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ interface Video {
 }
 
 export default function AdminPage() {
+  const isMobile = useIsMobile()
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [editingVideo, setEditingVideo] = useState<Video | null>(null)
@@ -243,14 +245,14 @@ export default function AdminPage() {
   const categories = Array.from(new Set(videos.map((v) => v.category).filter((cat): cat is string => Boolean(cat))))
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-8 lg:p-12">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
             Video Management
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Manage your video collection - edit details, categorize, and control visibility
           </p>
         </div>
@@ -306,7 +308,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredVideos.map((video) => (
               <Card
                 key={video.id}
@@ -316,7 +318,7 @@ export default function AdminPage() {
                     : "border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md"
                 }`}
               >
-                <CardContent className="p-5">
+                <CardContent className="p-3 sm:p-4 md:p-5">
                   {/* Video Preview */}
                   <div className="relative mb-4 bg-black rounded-lg overflow-hidden aspect-video">
                     <video
@@ -347,37 +349,37 @@ export default function AdminPage() {
                       <h3 className="font-bold text-lg text-gray-900 line-clamp-2 flex-1">
                         {video.title}
                       </h3>
-                      <div className="flex gap-1 flex-shrink-0">
+                      <div className="flex gap-1 sm:gap-1 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleVisibility(video)}
-                          className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                          className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 min-h-[44px] min-w-[44px] p-2"
                           title={video.is_visible === false ? "Show on website" : "Hide from website"}
                         >
                           {video.is_visible === false ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                           ) : (
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                           )}
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditClick(video)}
-                          className="text-gray-600 hover:text-red-600 hover:bg-red-50"
+                          className="text-gray-600 hover:text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] p-2"
                           title="Edit video"
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteClick(video)}
-                          className="text-gray-600 hover:text-red-600 hover:bg-red-50"
+                          className="text-gray-600 hover:text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] p-2"
                           title="Delete video from database"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                       </div>
                     </div>
@@ -508,21 +510,21 @@ export default function AdminPage() {
                 </Label>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
               <Button
                 variant="outline"
                 onClick={() => {
                   setEditDialogOpen(false)
                   setEditingVideo(null)
                 }}
-                className="border border-gray-300 hover:bg-gray-50"
+                className="border border-gray-300 hover:bg-gray-50 w-full sm:w-auto min-h-[44px]"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleEditSave}
                 disabled={saving || !editFormData.title.trim()}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-h-[44px]"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
@@ -546,20 +548,20 @@ export default function AdminPage() {
                 </span>
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
               <Button
                 variant="outline"
                 onClick={() => {
                   setDeleteDialogOpen(false)
                   setVideoToDelete(null)
                 }}
-                className="border border-gray-300 hover:bg-gray-50"
+                className="border border-gray-300 hover:bg-gray-50 w-full sm:w-auto min-h-[44px]"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteConfirm}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-h-[44px]"
               >
                 <EyeOff className="h-4 w-4 mr-2" />
                 Hide from Website

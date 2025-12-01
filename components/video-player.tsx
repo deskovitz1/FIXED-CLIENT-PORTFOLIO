@@ -4,6 +4,7 @@ import { useState } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Video } from "@/lib/db"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface VideoPlayerProps {
   video?: Video
@@ -15,6 +16,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const isMobile = useIsMobile()
   
   // Get URL using the same logic as the hover preview
   // If video object is passed, use video.video_url || video.blob_url
@@ -53,15 +55,15 @@ export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPl
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-7xl aspect-video bg-black">
+    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-2 sm:p-4">
+      <div className={`relative w-full ${isMobile ? 'h-full' : 'max-w-7xl aspect-video'} bg-black flex flex-col`}>
         <Button
           onClick={onClose}
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 z-50 text-white hover:bg-white/10"
+          className={`absolute ${isMobile ? 'top-2 right-2' : 'top-4 right-4'} z-50 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]`}
         >
-          <X className="h-6 w-6" />
+          <X className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
         
         <video
@@ -72,8 +74,8 @@ export function VideoPlayer({ video, videoUrl, title, isOpen, onClose }: VideoPl
           muted
           playsInline
           preload="auto"
-          className="w-full h-full"
-          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          className={`w-full ${isMobile ? 'h-full flex-1' : 'h-full'}`}
+          style={{ width: "100%", height: isMobile ? "100%" : "100%", objectFit: "contain" }}
           onLoadStart={() => {
             setIsLoading(true)
             // Start loading immediately when modal opens
