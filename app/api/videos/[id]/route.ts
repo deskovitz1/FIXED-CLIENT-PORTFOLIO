@@ -3,9 +3,13 @@ import { cookies } from "next/headers";
 import { deleteVideo, getVideoById, updateVideo } from "@/lib/db";
 import { del } from "@vercel/blob";
 
-// Enforce BLOB_READ_WRITE_TOKEN is set - fail loudly if missing
-if (!process.env.BLOB_READ_WRITE_TOKEN) {
-  throw new Error('BLOB_READ_WRITE_TOKEN missing – blob operations disabled. Set BLOB_READ_WRITE_TOKEN in environment variables.');
+// Enforce Blob token is set - fail loudly if missing
+const token =
+  process.env.CIRCUS_READ_WRITE_TOKEN ||
+  process.env.BLOB_READ_WRITE_TOKEN;
+
+if (!token) {
+  throw new Error("Missing Blob token");
 }
 
 function requireAdmin() {
@@ -54,7 +58,7 @@ export async function DELETE(
         try {
           // First, try with the full URL
           await del(video.blob_url, {
-            token: process.env.BLOB_READ_WRITE_TOKEN,
+            token: token,
           });
           blobDeleted = true;
           console.log("Blob deleted successfully (using full URL)");
@@ -67,7 +71,7 @@ export async function DELETE(
             console.log(`Attempting to delete blob with pathname: ${pathname}`);
             
             await del(pathname, {
-              token: process.env.BLOB_READ_WRITE_TOKEN,
+              token: token,
             });
             blobDeleted = true;
             console.log("Blob deleted successfully (using pathname)");

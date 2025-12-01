@@ -4,9 +4,13 @@ import {
   type HandleUploadBody,
 } from '@vercel/blob/client';
 
-// Enforce BLOB_READ_WRITE_TOKEN is set - fail loudly if missing
-if (!process.env.BLOB_READ_WRITE_TOKEN) {
-  throw new Error('BLOB_READ_WRITE_TOKEN missing – uploads disabled. Set BLOB_READ_WRITE_TOKEN in environment variables.');
+// Enforce Blob token is set - fail loudly if missing
+const token =
+  process.env.CIRCUS_READ_WRITE_TOKEN ||
+  process.env.BLOB_READ_WRITE_TOKEN;
+
+if (!token) {
+  throw new Error("Missing Blob token");
 }
 
 export async function POST(request: Request) {

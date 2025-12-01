@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 
-// Enforce BLOB_READ_WRITE_TOKEN is set - fail loudly if missing
-if (!process.env.BLOB_READ_WRITE_TOKEN) {
-  throw new Error('BLOB_READ_WRITE_TOKEN missing – uploads disabled. Set BLOB_READ_WRITE_TOKEN in environment variables.');
+// Enforce Blob token is set - fail loudly if missing
+const token =
+  process.env.CIRCUS_READ_WRITE_TOKEN ||
+  process.env.BLOB_READ_WRITE_TOKEN;
+
+if (!token) {
+  throw new Error("Missing Blob token");
 }
 
 // POST - Upload file directly to Blob (server-side)
@@ -30,17 +34,7 @@ export async function POST(request: NextRequest) {
 
     console.log("Uploading file to Blob:", filename, "Size:", file.size);
 
-    // Check if BLOB_READ_WRITE_TOKEN is set
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      console.error("BLOB_READ_WRITE_TOKEN is not set");
-      return NextResponse.json(
-        { 
-          error: "Blob storage not configured",
-          details: "BLOB_READ_WRITE_TOKEN environment variable is missing"
-        },
-        { status: 500 }
-      );
-    }
+    // Token is already validated at module level
 
     // Convert File to Buffer
     const bytes = await file.arrayBuffer();
@@ -51,7 +45,7 @@ export async function POST(request: NextRequest) {
       access: "public",
       contentType: file.type || "video/mp4",
       addRandomSuffix: true,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token: token,
     });
 
     console.log("File uploaded successfully:", blob.url);
