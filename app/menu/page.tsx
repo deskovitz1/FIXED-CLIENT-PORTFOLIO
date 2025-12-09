@@ -24,9 +24,14 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import type { Video } from "@/lib/db";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { VimeoPlayer } from "@/components/VimeoPlayer";
+import { getVideoThumbnail } from "@/lib/utils";
 
-// Pointer position: bottom of the wheel (270 degrees or -90 degrees from top)
-const POINTER_ANGLE = 270;
+// Pointer position: bottom of the wheel
+// The coordinate system: slices start at -90 (top), rotate clockwise
+// After CSS rotation, positions are: 0=right, 90=bottom, 180=left, 270=top
+// The pointer is visually at the bottom, which is 90 degrees in rotated coordinates
+const POINTER_ANGLE = 90;
 
 type SliceInfo = {
   index: number;
@@ -78,11 +83,197 @@ export default function MainMenuPage() {
   // Maps directly to videos[previewVideoIndex]
   const [previewVideoIndex, setPreviewVideoIndex] = useState<number | null>(null);
   const [leverPulled, setLeverPulled] = useState(false);
-  const [crtVideoSrc, setCrtVideoSrc] = useState<string | null>(null); // Lazy-loaded video src
   const [isCrtPlaying, setIsCrtPlaying] = useState(false);
-  const crtVideoRef = useRef<HTMLVideoElement>(null);
+  const [hasSpunOnce, setHasSpunOnce] = useState(false); // Track if wheel has been spun
   const wheelRef = useRef<HTMLDivElement>(null);
+  const staticVideoRef = useRef<HTMLVideoElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const spinSoundRef = useRef<AudioBufferSourceNode | null>(null);
+  const lastClickAngleRef = useRef<number | null>(null); // Track last angle where we played a click
+  const lastClickTimeRef = useRef<number>(0); // Track last click timestamp to prevent rapid clicks
   const router = useRouter();
+  
+  // Store winning index and final rotation during spin to use in transitionend handler
+  const winningIndexRef = useRef<number | null>(null);
+  const finalRotationRef = useRef<number | null>(null);
+
+  // TV Static video URL
+  const STATIC_VIDEO_URL = "https://f8itx2l7pd6t7gmj.public.blob.vercel-storage.com/TV%20Static%20Sound%20Effect%20-%20Bzz%20-%20Alesjo%20Llazari%20%281080p%2C%20h264%29.mp4";
+
+  // Initialize AudioContext on first user interaction
+  const initAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    return audioContextRef.current;
+  };
+
+  // Generate satisfying crank sound (mechanical turning/ratcheting)
+  const playLeverSound = () => {
+    try {
+      const ctx = initAudioContext();
+      
+      // Create a mechanical crank/ratchet sound - like turning a handle
+      
+      // First: Initial engagement click
+      const clickOsc1 = ctx.createOscillator();
+      const clickGain1 = ctx.createGain();
+      
+      clickOsc1.connect(clickGain1);
+      clickGain1.connect(ctx.destination);
+      
+      clickOsc1.type = 'square';
+      clickOsc1.frequency.setValueAtTime(250, ctx.currentTime);
+      clickOsc1.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.04);
+      
+      clickGain1.gain.setValueAtTime(0.12, ctx.currentTime);
+      clickGain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      
+      clickOsc1.start(ctx.currentTime);
+      clickOsc1.stop(ctx.currentTime + 0.06);
+      
+      // Second: Mechanical ratchet/gear sound
+      setTimeout(() => {
+        try {
+          const ratchetOsc = ctx.createOscillator();
+          const ratchetGain = ctx.createGain();
+          const ratchetFilter = ctx.createBiquadFilter();
+          
+          ratchetOsc.connect(ratchetFilter);
+          ratchetFilter.connect(ratchetGain);
+          ratchetGain.connect(ctx.destination);
+          
+          // Lower, more mechanical sound
+          ratchetOsc.type = 'sawtooth';
+          ratchetFilter.type = 'lowpass';
+          ratchetFilter.frequency.setValueAtTime(400, ctx.currentTime);
+          
+          ratchetOsc.frequency.setValueAtTime(120, ctx.currentTime);
+          ratchetOsc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.15);
+          
+          ratchetGain.gain.setValueAtTime(0.08, ctx.currentTime);
+          ratchetGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+          
+          ratchetOsc.start(ctx.currentTime);
+          ratchetOsc.stop(ctx.currentTime + 0.15);
+        } catch (e) {
+          // Ignore
+        }
+      }, 40);
+      
+      // Third: Final release click
+      setTimeout(() => {
+        try {
+          const clickOsc2 = ctx.createOscillator();
+          const clickGain2 = ctx.createGain();
+          
+          clickOsc2.connect(clickGain2);
+          clickGain2.connect(ctx.destination);
+          
+          clickOsc2.type = 'square';
+          clickOsc2.frequency.setValueAtTime(200, ctx.currentTime);
+          clickOsc2.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.03);
+          
+          clickGain2.gain.setValueAtTime(0.1, ctx.currentTime);
+          clickGain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+          
+          clickOsc2.start(ctx.currentTime);
+          clickOsc2.stop(ctx.currentTime + 0.05);
+        } catch (e) {
+          // Ignore
+        }
+      }, 180);
+      
+    } catch (err) {
+      // Ignore audio errors (autoplay restrictions, etc.)
+    }
+  };
+
+  // Play a single click sound (called when wheel passes a notch)
+  const playClickSound = () => {
+    try {
+      const ctx = initAudioContext();
+      
+      // Prevent clicks from overlapping too quickly - minimum 40ms between clicks
+      const now = Date.now();
+      if (now - lastClickTimeRef.current < 40) {
+        return; // Skip this click if too soon
+      }
+      lastClickTimeRef.current = now;
+      
+      const tickOsc = ctx.createOscillator();
+      const tickGain = ctx.createGain();
+      
+      tickOsc.connect(tickGain);
+      tickGain.connect(ctx.destination);
+      
+      // More playful, lighter click sound - less harsh
+      // Slightly vary the frequency for more fun (between 280-320Hz)
+      const baseFreq = 300 + (Math.random() - 0.5) * 40;
+      tickOsc.type = 'sine'; // Changed from square to sine for softer sound
+      tickOsc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+      tickOsc.frequency.exponentialRampToValueAtTime(baseFreq * 0.85, ctx.currentTime + 0.015);
+      
+      // Much quieter and softer
+      tickGain.gain.setValueAtTime(0.035, ctx.currentTime);
+      tickGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.025);
+      
+      tickOsc.start(ctx.currentTime);
+      tickOsc.stop(ctx.currentTime + 0.025);
+    } catch (err) {
+      // Ignore audio errors
+    }
+  };
+
+  // Start tracking wheel rotation for real-time clicks
+  const startSpinSoundTracking = () => {
+    // Reset tracking
+    lastClickAngleRef.current = null;
+  };
+
+  // Play final sound when wheel lands and video is selected
+  const playFinalSelectionSound = () => {
+    try {
+      const ctx = initAudioContext();
+      
+      // Create a calming, gentle bell-like sound
+      // Soft and soothing for a peaceful resolution
+      
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      
+      // Soft, bell-like tone
+      osc.type = 'sine';
+      
+      // Gentle, lower frequency for calmness
+      osc.frequency.setValueAtTime(330, ctx.currentTime); // E4 - warm and calming
+      
+      // Soft lowpass filter for warmth
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, ctx.currentTime);
+      filter.Q.setValueAtTime(1, ctx.currentTime);
+      
+      // Very gentle fade in and long, smooth fade out
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.15); // Slow fade in
+      gain.gain.setValueAtTime(0.04, ctx.currentTime + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2); // Long, gentle fade out
+      
+      // Very gentle pitch drop for extra calmness
+      osc.frequency.exponentialRampToValueAtTime(310, ctx.currentTime + 1.2);
+      
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 1.2);
+      
+    } catch (err) {
+      // Ignore audio errors
+    }
+  };
 
   const fetchVideos = async () => {
     try {
@@ -150,19 +341,66 @@ export default function MainMenuPage() {
       }
       
       .circus-light--active {
-        opacity: 0.9;
-        box-shadow: 0 0 6px rgba(249, 115, 22, 0.6), 0 0 10px rgba(249, 115, 22, 0.4);
-        animation: casinoLightPulse 0.8s ease-in-out infinite;
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(249, 115, 22, 0.8), 0 0 16px rgba(249, 115, 22, 0.6), 0 0 24px rgba(249, 115, 22, 0.4);
+        animation: casinoLightChase 1.2s ease-in-out infinite;
       }
       
-      @keyframes casinoLightPulse {
-        0%, 100% {
-          opacity: 0.7;
-          transform: translate(-50%, -50%) scale(1);
+      @keyframes casinoLightChase {
+        0% {
+          opacity: 0.3;
+          transform: translate(-50%, -50%) scale(0.8);
+          box-shadow: 0 0 4px rgba(249, 115, 22, 0.4), 0 0 8px rgba(249, 115, 22, 0.2);
+        }
+        25% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.3);
+          box-shadow: 0 0 12px rgba(249, 115, 22, 1), 0 0 20px rgba(249, 115, 22, 0.8), 0 0 30px rgba(249, 115, 22, 0.6);
         }
         50% {
+          opacity: 0.8;
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 0 8px rgba(249, 115, 22, 0.8), 0 0 16px rgba(249, 115, 22, 0.6);
+        }
+        75% {
           opacity: 1;
-          transform: translate(-50%, -50%) scale(1.15);
+          transform: translate(-50%, -50%) scale(1.4);
+          box-shadow: 0 0 14px rgba(249, 115, 22, 1), 0 0 24px rgba(249, 115, 22, 0.9), 0 0 36px rgba(249, 115, 22, 0.7);
+        }
+        100% {
+          opacity: 0.3;
+          transform: translate(-50%, -50%) scale(0.8);
+          box-shadow: 0 0 4px rgba(249, 115, 22, 0.4), 0 0 8px rgba(249, 115, 22, 0.2);
+        }
+      }
+      
+      /* Selected slice highlighting styles */
+      .slice--selected {
+        filter: brightness(1.15) saturate(1.2);
+      }
+      
+      .slice-image--selected {
+        filter: brightness(1.1) contrast(1.1);
+        box-shadow: 0 0 24px rgba(255, 255, 255, 0.7), inset 0 0 40px rgba(239, 68, 68, 0.2);
+      }
+      
+      /* CRT thumbnail selected state - subtle pulse when winner is selected */
+      .crt-thumbnail--selected {
+        animation: crtPulse 0.6s ease-out;
+      }
+      
+      @keyframes crtPulse {
+        0% {
+          transform: scale(1);
+          filter: brightness(1);
+        }
+        50% {
+          transform: scale(1.02);
+          filter: brightness(1.15);
+        }
+        100% {
+          transform: scale(1);
+          filter: brightness(1);
         }
       }
       
@@ -219,17 +457,23 @@ export default function MainMenuPage() {
       let closestIndex = 0;
       let minDistance = Infinity;
 
+      // Normalize rotation to 0-360 range first (handles large values like 1980 degrees)
+      const normalizedRotation = ((currentRotation % 360) + 360) % 360;
+
       for (let i = 0; i < sliceCount; i++) {
         const startAngle = -90 + i * anglePerSlice;
         const centerAngle = startAngle + anglePerSlice / 2;
         // Calculate where this slice's center is after rotation
-        const rotatedCenter = (currentRotation + centerAngle) % 360;
+        // Add normalized rotation to center angle, then normalize result to 0-360
+        let rotatedCenter = normalizedRotation + centerAngle;
         // Normalize to 0-360 range
-        const normalizedCenter = rotatedCenter < 0 ? rotatedCenter + 360 : rotatedCenter;
-        // Calculate distance to pointer (270 degrees)
+        while (rotatedCenter < 0) rotatedCenter += 360;
+        while (rotatedCenter >= 360) rotatedCenter -= 360;
+        
+        // Calculate distance to pointer (90 degrees = bottom)
         const distance = Math.min(
-          Math.abs(normalizedCenter - POINTER_ANGLE),
-          360 - Math.abs(normalizedCenter - POINTER_ANGLE)
+          Math.abs(rotatedCenter - POINTER_ANGLE),
+          360 - Math.abs(rotatedCenter - POINTER_ANGLE)
         );
 
         if (distance < minDistance) {
@@ -256,104 +500,157 @@ export default function MainMenuPage() {
     return videos[0] || null;
   }, [isSpinning, previewVideoIndex, selectedVideoIndex, videos]);
 
-  // BANDWIDTH-SAFE: Reset video src when activeVideo changes (but don't load it yet)
-  // Only clears video when spin stops and selection changes - prevents loading during spin animation
+  // Reset video playing state when activeVideo changes
   useEffect(() => {
     if (activeVideo && !isSpinning) {
-      // Clear video src when video changes - user must click play to load
-      // IMPORTANT: Only reset when NOT spinning to prevent bandwidth waste during wheel animation
-      setCrtVideoSrc(null);
+      // Reset playing state when video changes - user must click play to load
       setIsCrtPlaying(false);
-      if (crtVideoRef.current) {
-        crtVideoRef.current.pause();
-        crtVideoRef.current.src = '';
-        crtVideoRef.current.load();
-      }
     }
   }, [activeVideo?.id, isSpinning]); // Only reset when video ID changes AND spin is complete
 
-  // BANDWIDTH-SAFE: Handle play button click - lazy-load video only when user explicitly plays
-  // Video src is set ONLY when user clicks play, NOT during spin animation
+  // Handle play button click - show video (Vimeo only)
   const handleCrtPlay = () => {
     if (!activeVideo || isSpinning) return; // Prevent loading during spin
     
-    // Get direct Blob URL (no API proxy)
-    const videoUrl = activeVideo.video_url || activeVideo.blob_url;
-    if (!videoUrl) {
-      console.error("No video URL available for:", activeVideo.title);
-      return;
-    }
-
-    // Set video src only when user clicks play (single video download per selection)
-    if (!crtVideoSrc || crtVideoSrc !== videoUrl) {
-      setCrtVideoSrc(videoUrl);
-    }
-
-    // Play video
-    setTimeout(() => {
-      crtVideoRef.current?.play().catch((err) => {
-        console.error("Failed to play video:", err);
-      });
+    // Only play if video has Vimeo ID
+    if (activeVideo.vimeo_id) {
       setIsCrtPlaying(true);
-    }, 100);
+    }
   };
 
-  // BANDWIDTH-SAFE: Spin wheel - clears video src during spin to prevent loading
+  // Spin wheel logic: ensures selected slice center lands exactly at the pointer
   const spinWheel = () => {
     if (isSpinning || sliceCount === 0) return;
+
+    // Mark that wheel has been spun - stop static video
+    setHasSpunOnce(true);
+    
+    // Stop static video if playing
+    if (staticVideoRef.current) {
+      staticVideoRef.current.pause();
+      staticVideoRef.current.currentTime = 0;
+    }
+    
+    // Start tracking wheel for real-time clicks
+    startSpinSoundTracking();
 
     setIsSpinning(true);
     setSelectedVideoIndex(null);
     setPreviewVideoIndex(null);
-    // Clear video src during spin to prevent any video loading during animation
-    setCrtVideoSrc(null);
+    // Clear video playing state during spin to prevent any video loading during animation
     setIsCrtPlaying(false);
-    if (crtVideoRef.current) {
-      crtVideoRef.current.pause();
-      crtVideoRef.current.src = '';
-    }
 
-    const anglePerSlice = 360 / sliceCount;
-    // Randomly select a target video index (0 to sliceCount-1)
-    const targetVideoIndex = Math.floor(Math.random() * sliceCount);
+    // Constants: slice angle and number of full spins for visual effect
+    const sliceAngle = 360 / sliceCount;
+    const spins = 5; // Number of full rotations for visual effect
     
-    // Calculate the angle needed to align this slice's center with the bottom pointer
-    // The slice center starts at: -90 + targetVideoIndex * anglePerSlice + anglePerSlice/2
-    const sliceStartAngle = -90 + targetVideoIndex * anglePerSlice;
-    const sliceCenterAngle = sliceStartAngle + anglePerSlice / 2;
+    // Randomly select the winning slice index (0 to sliceCount-1)
+    const winningIndex = Math.floor(Math.random() * sliceCount);
     
-    // Normalize slice center to 0-360 range
-    const normalizedSliceCenter = sliceCenterAngle < 0 ? sliceCenterAngle + 360 : sliceCenterAngle;
+    // Store winning index for use in transitionend handler
+    winningIndexRef.current = winningIndex;
     
-    // We want the slice center to be at POINTER_ANGLE (270 degrees) after final rotation
-    // Calculate what the final rotation should be (from 0) to align this slice with pointer
-    let targetFinalRotation = POINTER_ANGLE - sliceCenterAngle;
-    // Normalize to 0-360 range
-    while (targetFinalRotation < 0) targetFinalRotation += 360;
-    while (targetFinalRotation >= 360) targetFinalRotation -= 360;
+    // Calculate the center angle of the winning slice in wheel's local coordinates
+    // Slices start at -90 degrees (top), so:
+    // - Slice 0 center: -90 + sliceAngle/2
+    // - Slice 1 center: -90 + sliceAngle + sliceAngle/2
+    // - Slice i center: -90 + i * sliceAngle + sliceAngle/2
+    const sliceCenterAngle = -90 + winningIndex * sliceAngle + sliceAngle / 2;
     
-    // Add multiple full spins for visual effect (6 full rotations = 2160 degrees)
-    const extraSpins = 360 * 6;
-    // Calculate final rotation: current rotation + extra spins + adjustment to reach target
-    const currentRotationNormalized = ((rotation % 360) + 360) % 360;
-    let adjustment = targetFinalRotation - currentRotationNormalized;
-    if (adjustment < 0) adjustment += 360;
+    // The pointer is fixed at the bottom (90 degrees in rotated coordinates)
+    // Coordinate system: slices start at -90 (top), rotate clockwise
+    // After CSS rotation R, slice center absolute position: (sliceCenterAngle + R) % 360
+    // Where: 0=right, 90=bottom, 180=left, 270=top
+    // We want: (sliceCenterAngle + R) % 360 = 90 (bottom/pointer)
+    // Solving: R % 360 = (90 - sliceCenterAngle) % 360
     
-    const finalRotation = rotation + extraSpins + adjustment;
+    // Convert slice center to 0-360 range (add 360 if negative)
+    let normalizedSliceCenter = sliceCenterAngle;
+    while (normalizedSliceCenter < 0) normalizedSliceCenter += 360;
+    while (normalizedSliceCenter >= 360) normalizedSliceCenter -= 360;
+    
+    // Calculate what rotation mod 360 we need to align slice center with pointer
+    // Pointer is at 90 degrees (bottom)
+    let targetRotationMod = (POINTER_ANGLE - normalizedSliceCenter + 360) % 360;
+    
+    // Get current rotation normalized to 0-360 range
+    const currentMod = ((rotation % 360) + 360) % 360;
+    
+    // Calculate the extra rotation needed from current position
+    // This will make the slice center align with the bottom pointer (90 degrees)
+    let extra = targetRotationMod - currentMod;
+    if (extra < 0) extra += 360;
+    
+    // Final rotation: current + full spins + adjustment
+    const finalRotation = rotation + spins * 360 + extra;
+
+    // Store final rotation for use in transitionend handler
+    finalRotationRef.current = finalRotation;
 
     // Use requestAnimationFrame to ensure transition is applied before rotation change
     requestAnimationFrame(() => {
       setRotation(finalRotation);
     });
 
-    // After animation completes, determine which video is actually at the pointer
-    setTimeout(() => {
-      setIsSpinning(false);
-      // Calculate which video index is aligned with the bottom pointer
-      const actualVideoIndex = getVideoIndexAtPointer(finalRotation);
-      setSelectedVideoIndex(actualVideoIndex);
-      setPreviewVideoIndex(actualVideoIndex);
+    // Handle animation end using transitionend event (more reliable than setTimeout)
+    // The timeout is a fallback in case transitionend doesn't fire
+    const timeoutId = setTimeout(() => {
+      handleSpinEnd();
     }, 4600);
+
+    // Store timeout ID to clear if transitionend fires first
+    if (wheelRef.current) {
+      (wheelRef.current as any)._spinTimeoutId = timeoutId;
+    }
+  };
+
+  // Handle spin animation end - mark the winner
+  // Calculate which slice is actually at the pointer using the final rotation
+  const handleSpinEnd = () => {
+    if (!isSpinning) return; // Guard against multiple calls
+    
+    // Use the stored final rotation to calculate which slice is at the pointer
+    // This ensures we use the exact rotation value that was set
+    const finalRotation = finalRotationRef.current;
+    
+    if (finalRotation === null) {
+      // Fallback: use stored winner index
+      const winner = winningIndexRef.current;
+      if (winner !== null) {
+        setIsSpinning(false);
+        setSelectedVideoIndex(winner);
+        setPreviewVideoIndex(winner);
+        winningIndexRef.current = null;
+        finalRotationRef.current = null;
+        
+        // Play final click sound (same as regular clicks)
+        playClickSound();
+      }
+      return;
+    }
+    
+    // Calculate which slice is actually at the pointer position (90 degrees = bottom)
+    // Normalize the final rotation first to ensure accurate calculation
+    const normalizedFinalRotation = ((finalRotation % 360) + 360) % 360;
+    const actualSliceAtPointer = getVideoIndexAtPointer(normalizedFinalRotation);
+    
+    // Use the calculated slice at pointer - this is the slice actually under the red arrow
+    // This ensures the highlighted slice matches the video shown in CRT
+    const winner = actualSliceAtPointer !== null ? actualSliceAtPointer : winningIndexRef.current;
+    
+    if (winner !== null && winner >= 0 && winner < videos.length) {
+      setIsSpinning(false);
+      // Set the selected index - this will:
+      // 1. Highlight the slice at the pointer (isSelected = true for that slice)
+      // 2. Show that video in the CRT (activeVideo = videos[selectedVideoIndex])
+      setSelectedVideoIndex(winner);
+      setPreviewVideoIndex(winner);
+      winningIndexRef.current = null;
+      finalRotationRef.current = null;
+      
+      // Play final click sound (same as regular clicks)
+      playClickSound();
+    }
   };
 
   const handleLeverPullStart = () => {
@@ -369,12 +666,15 @@ export default function MainMenuPage() {
   };
 
   // Update preview video index during spin by reading actual DOM transform
+  // Also play click sounds in real-time as wheel rotates
   // This shows which video is currently under the bottom pointer as the wheel spins
   useEffect(() => {
     if (!isSpinning || sliceCount === 0 || !wheelRef.current) {
       if (!isSpinning) {
         // Clear preview when not spinning
         setPreviewVideoIndex(null);
+        lastClickAngleRef.current = null;
+        lastClickTimeRef.current = 0;
       }
       return;
     }
@@ -400,6 +700,42 @@ export default function MainMenuPage() {
           // Normalize to 0-360
           const normalizedAngle = angleDeg < 0 ? angleDeg + 360 : angleDeg;
           
+          // Play click sounds based on actual rotation progress
+          // Play a click every time we pass a slice notch (every ~sliceAngle degrees)
+          if (sliceCount > 0) {
+            const sliceAngle = 360 / sliceCount;
+            const lastAngle = lastClickAngleRef.current;
+            
+            if (lastAngle !== null) {
+              // Calculate how much we've rotated since last check
+              let angleDiff = normalizedAngle - lastAngle;
+              
+              // Handle wrap-around (360 -> 0 transition)
+              if (angleDiff < -180) angleDiff += 360;
+              if (angleDiff > 180) angleDiff -= 360;
+              
+              // Only play click if we've rotated past a slice boundary
+              // Use higher threshold and time-based throttling to prevent rapid clicking
+              const threshold = sliceAngle * 0.85; // Require 85% of slice angle
+              const now = Date.now();
+              
+              // Check both angle threshold AND minimum time between clicks
+              if (Math.abs(angleDiff) >= threshold && (now - lastClickTimeRef.current) >= 60) {
+                playClickSound();
+                lastClickTimeRef.current = now;
+                // Update to the angle we clicked at, not current angle
+                // This prevents multiple clicks while still in same slice
+                lastClickAngleRef.current = lastAngle + (angleDiff > 0 ? threshold : -threshold);
+                // Normalize
+                if (lastClickAngleRef.current < 0) lastClickAngleRef.current += 360;
+                if (lastClickAngleRef.current >= 360) lastClickAngleRef.current -= 360;
+              }
+            } else {
+              // First frame - initialize
+              lastClickAngleRef.current = normalizedAngle;
+            }
+          }
+          
           const currentVideoIndex = getVideoIndexAtPointer(normalizedAngle);
           setPreviewVideoIndex(currentVideoIndex);
         }
@@ -421,7 +757,7 @@ export default function MainMenuPage() {
   }, [isSpinning, sliceCount, getVideoIndexAtPointer]);
 
   return (
-    <main className="circle-test-page min-h-screen w-full flex flex-col items-center justify-between bg-white text-black px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 relative overflow-hidden">
+    <main className="circle-test-page min-h-screen w-full flex flex-col items-center justify-between bg-black text-white px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 relative overflow-hidden">
       {/* Casino-style lights around the perimeter */}
       <div className="circus-lights-container absolute inset-0 pointer-events-none z-0">
         {/* Top row */}
@@ -431,7 +767,7 @@ export default function MainMenuPage() {
             className={`circus-light absolute top-2 ${isSpinning ? "circus-light--active" : ""}`}
             style={{
               left: `${(i + 1) * (100 / 21)}%`,
-              animationDelay: `${i * 0.1}s`,
+              animationDelay: `${i * 0.05}s`,
             }}
           />
         ))}
@@ -443,7 +779,7 @@ export default function MainMenuPage() {
             className={`circus-light absolute bottom-2 ${isSpinning ? "circus-light--active" : ""}`}
             style={{
               left: `${(i + 1) * (100 / 21)}%`,
-              animationDelay: `${(i + 10) * 0.1}s`,
+              animationDelay: `${(i + 20) * 0.05}s`,
             }}
           />
         ))}
@@ -455,7 +791,7 @@ export default function MainMenuPage() {
             className={`circus-light absolute left-2 ${isSpinning ? "circus-light--active" : ""}`}
             style={{
               top: `${(i + 1) * (100 / 13)}%`,
-              animationDelay: `${(i + 5) * 0.1}s`,
+              animationDelay: `${(i + 40) * 0.05}s`,
             }}
           />
         ))}
@@ -467,7 +803,7 @@ export default function MainMenuPage() {
             className={`circus-light absolute right-2 ${isSpinning ? "circus-light--active" : ""}`}
             style={{
               top: `${(i + 1) * (100 / 13)}%`,
-              animationDelay: `${(i + 15) * 0.1}s`,
+              animationDelay: `${(i + 52) * 0.05}s`,
             }}
           />
         ))}
@@ -481,7 +817,7 @@ export default function MainMenuPage() {
             className="group relative inline-flex items-center"
           >
             <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">All</span>
+              <span className="relative z-10 text-white group-hover:text-white">All</span>
             </span>
           </a>
           <a
@@ -489,7 +825,7 @@ export default function MainMenuPage() {
             className="group relative inline-flex items-center"
           >
             <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">Music</span>
+              <span className="relative z-10 text-white group-hover:text-white">Music</span>
             </span>
           </a>
           <a
@@ -497,7 +833,7 @@ export default function MainMenuPage() {
             className="group relative inline-flex items-center"
           >
             <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">Launch Videos</span>
+              <span className="relative z-10 text-white group-hover:text-white">Launch Videos</span>
             </span>
           </a>
           <a
@@ -505,7 +841,7 @@ export default function MainMenuPage() {
             className="group relative inline-flex items-center"
           >
             <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">Clothing</span>
+              <span className="relative z-10 text-white group-hover:text-white">Clothing</span>
             </span>
           </a>
           <a
@@ -513,7 +849,7 @@ export default function MainMenuPage() {
             className="group relative inline-flex items-center"
           >
             <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">LIVE EVENTS</span>
+              <span className="relative z-10 text-white group-hover:text-white">LIVE EVENTS</span>
             </span>
           </a>
           <a
@@ -521,16 +857,7 @@ export default function MainMenuPage() {
             className="group relative inline-flex items-center"
           >
             <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">BTS</span>
-            </span>
-          </a>
-          {/* Link to old menu page */}
-          <a
-            href="/circle-video-test"
-            className="group relative inline-flex items-center"
-          >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-black group-hover:text-white">Old Menu</span>
+              <span className="relative z-10 text-white group-hover:text-white">BTS</span>
             </span>
           </a>
         </nav>
@@ -541,16 +868,13 @@ export default function MainMenuPage() {
         <div className="relative z-10 flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4 animate-pulse">🎪</div>
-            <p className="text-sm text-gray-500 tracking-[0.25em] uppercase">
-              Loading circle collage…
-            </p>
           </div>
         </div>
       ) : !slices.length ? (
         <div className="relative z-10 flex-1 flex items-center justify-center w-full">
           <div className="text-center">
-            <p className="text-lg text-gray-800 mb-2">No videos available</p>
-            <p className="text-xs text-gray-500 uppercase tracking-[0.25em]">
+            <p className="text-lg text-gray-200 mb-2">No videos available</p>
+            <p className="text-xs text-gray-400 uppercase tracking-[0.25em]">
               Upload videos in the admin panel to populate this circle
             </p>
           </div>
@@ -559,20 +883,22 @@ export default function MainMenuPage() {
         <div className="relative z-10 sc-page w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-24 xl:gap-32 flex-1 py-4 sm:py-6 md:py-8 lg:py-12">
           {/* Left side: lever + wheel in a row */}
           <div className="sc-left flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12 flex-shrink-0">
-            {/* Minimal lever on the left */}
-            <div
-              className={`lever-mount relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[140px] md:h-[140px] flex items-center justify-start cursor-pointer min-h-[44px] min-w-[44px] ${
-                isSpinning ? "lever-mount--disabled opacity-50 cursor-not-allowed" : ""
-              }`}
-              onMouseDown={handleLeverPullStart}
-              onMouseUp={handleLeverPullEnd}
-              onMouseLeave={handleLeverPullEnd}
-              onTouchStart={(e) => {
-                e.preventDefault();
-                handleLeverPullStart();
-              }}
-              onTouchEnd={handleLeverPullEnd}
-            >
+            {/* Lever with spin indication */}
+            <div className="flex flex-col items-center gap-2">
+              {/* Minimal lever on the left */}
+              <div
+                className={`lever-mount relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[140px] md:h-[140px] flex items-center justify-start cursor-pointer min-h-[44px] min-w-[44px] ${
+                  isSpinning ? "lever-mount--disabled opacity-50 cursor-not-allowed" : ""
+                }`}
+                onMouseDown={handleLeverPullStart}
+                onMouseUp={handleLeverPullEnd}
+                onMouseLeave={handleLeverPullEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleLeverPullStart();
+                }}
+                onTouchEnd={handleLeverPullEnd}
+              >
               {/* Lever arm: red ball + bar into base (visually pivoting in center of base) */}
               <div
                 className="lever-arm absolute left-1 top-1/2 w-[130px] h-9"
@@ -593,6 +919,13 @@ export default function MainMenuPage() {
               <div className="lever-base absolute right-0 top-1/2 w-[32px] h-[80px] -translate-y-1/2 rounded-[7px] bg-neutral-900 shadow-[0_7px_16px_rgba(0,0,0,0.45)] flex items-center justify-center">
                 <div className="lever-slot w-[5px] h-[60px] rounded-[3px] bg-neutral-700" />
               </div>
+              </div>
+              {/* Spin indication label */}
+              <div className="text-center">
+                <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-medium">
+                  Pull to Spin
+                </div>
+              </div>
             </div>
 
             {/* WHEEL COLUMN (right of lever) */}
@@ -600,6 +933,39 @@ export default function MainMenuPage() {
               <div
                 ref={wheelRef}
                 className="circle-wrapper relative rounded-full overflow-hidden border-2 border-gray-300 shadow-[0_20px_60px_rgba(15,23,42,0.25)] bg-white"
+                onTransitionEnd={(e) => {
+                  // Only handle transform transitions (not other CSS properties)
+                  // This ensures the winner is set when the spin animation completes
+                  if (e.propertyName === 'transform' && isSpinning && e.target === wheelRef.current) {
+                    // Clear the timeout fallback
+                    const timeoutId = (wheelRef.current as any)?._spinTimeoutId;
+                    if (timeoutId) {
+                      clearTimeout(timeoutId);
+                      delete (wheelRef.current as any)?._spinTimeoutId;
+                    }
+                    
+                    // Read the actual final rotation from the DOM to ensure accuracy
+                    // This accounts for any CSS rounding or adjustment
+                    if (wheelRef.current) {
+                      const computedStyle = window.getComputedStyle(wheelRef.current);
+                      const transform = computedStyle.transform;
+                      if (transform && transform !== 'none') {
+                        const matrix = transform.match(/matrix\(([^)]+)\)/);
+                        if (matrix) {
+                          const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
+                          // Extract rotation angle from matrix (cos, sin, -sin, cos, tx, ty)
+                          const angleRad = Math.atan2(values[1], values[0]);
+                          let angleDeg = (angleRad * 180) / Math.PI;
+                          // Normalize to 0-360, but preserve the full rotation for calculation
+                          // We'll use the stored finalRotationRef value which has the full rotation
+                        }
+                      }
+                    }
+                    
+                    // Mark spin as complete - handleSpinEnd will calculate winner from final rotation
+                    handleSpinEnd();
+                  }
+                }}
                 style={{
                   width: isMobile ? "min(85vw, 400px)" : "600px",
                   height: isMobile ? "min(85vw, 400px)" : "600px",
@@ -639,13 +1005,13 @@ export default function MainMenuPage() {
                   }
                   
                   const isHovered = hoveredIndex === index;
-                  // Selected if this slice's video index matches selectedVideoIndex
+                  // Selected if this slice's video index matches selectedVideoIndex (winner)
                   const isSelected = selectedVideoIndex === videoIndex && !isSpinning;
                   
-                  // BANDWIDTH-SAFE: Use thumbnail_url if available, otherwise neutral placeholder
+                  // BANDWIDTH-SAFE: Use thumbnail_url if available, fallback to Vimeo thumbnail if vimeo_id exists
                   // Slices should NEVER use <video> elements - only small image thumbnails (JPG/PNG/WebP)
                   // This prevents downloading full video files for every slice in the wheel
-                  const thumbnailUrl = video.thumbnail_url || null;
+                  const thumbnailUrl = getVideoThumbnail(video);
 
                   return (
                     <button
@@ -656,13 +1022,14 @@ export default function MainMenuPage() {
                         // Set selectedVideoIndex directly (single source of truth)
                         // This maps directly to videos[selectedVideoIndex]
                         setSelectedVideoIndex(videoIndex);
+                        setPreviewVideoIndex(videoIndex);
                       }}
                       onMouseEnter={() => !isSpinning && setHoveredIndex(index)}
                       onMouseLeave={() => !isSpinning && setHoveredIndex(null)}
                       className={[
                         "circle-slice absolute inset-0 group transition-all duration-200 ease-out",
                         isHovered && !isSpinning ? "scale-[1.02] z-10" : "",
-                        isSelected ? "scale-[1.05] z-20 ring-4 ring-red-500 ring-offset-2 shadow-[0_0_20px_rgba(239,68,68,0.8)]" : "",
+                        isSelected ? "slice--selected scale-[1.05] z-20" : "",
                         isSpinning ? "pointer-events-none" : "cursor-pointer",
                       ].join(" ")}
                       style={{
@@ -674,7 +1041,10 @@ export default function MainMenuPage() {
                         <img
                           src={thumbnailUrl}
                           alt={video.title || `Video ${index + 1}`}
-                          className="circle-slice-image w-full h-full object-cover block transition-transform duration-300 ease-out group-hover:scale-[1.05]"
+                          className={[
+                            "circle-slice-image w-full h-full object-cover block transition-all duration-300 ease-out",
+                            isSelected ? "slice-image--selected" : "group-hover:scale-[1.05]",
+                          ].join(" ")}
                           loading="lazy"
                           onError={(e) => {
                             // Fallback to neutral gray if thumbnail fails
@@ -706,9 +1076,19 @@ export default function MainMenuPage() {
                           </span>
                         </div>
                       )}
-                      {/* Selected state overlay */}
+                      {/* Selected state overlay - enhanced highlighting for winner */}
                       {isSelected && (
-                        <div className="absolute inset-0 bg-red-500/20 pointer-events-none animate-pulse" />
+                        <div className="absolute inset-0 pointer-events-none">
+                          {/* Pulsing glow overlay */}
+                          <div className="absolute inset-0 bg-red-500/20 animate-pulse" />
+                          {/* Bright border glow */}
+                          <div className="absolute inset-0 border-4 border-red-500/60 rounded-full shadow-[0_0_30px_rgba(239,68,68,0.9),inset_0_0_20px_rgba(239,68,68,0.3)]" 
+                            style={{
+                              WebkitClipPath: clipPath,
+                              clipPath,
+                            }}
+                          />
+                        </div>
                       )}
                     </button>
                   );
@@ -726,11 +1106,11 @@ export default function MainMenuPage() {
               {/* Selected video title display below wheel */}
               {selectedVideoIndex != null && videos[selectedVideoIndex] && !isSpinning && (
                 <div className="mt-4 text-center max-w-md">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  <h3 className="text-lg font-semibold text-white mb-1">
                     {videos[selectedVideoIndex].title}
                   </h3>
                   {videos[selectedVideoIndex].description && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
+                    <p className="text-sm text-gray-300 line-clamp-2">
                       {videos[selectedVideoIndex].description}
                     </p>
                   )}
@@ -761,18 +1141,31 @@ export default function MainMenuPage() {
                   {/* CRT Screen Curvature Effect (subtle) */}
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none z-15" />
                   
-                  {activeVideo ? (
+                  {!hasSpunOnce ? (
+                    // Show TV static video until first spin
+                    <video
+                      ref={staticVideoRef}
+                      src={STATIC_VIDEO_URL}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : activeVideo ? (
                     <>
                       {/* Always show thumbnail first - no video loading until play is clicked */}
-                      {!crtVideoSrc || !isCrtPlaying ? (
+                      {!isCrtPlaying ? (
                         // Show thumbnail (no video bytes downloaded)
                         <div className="relative w-full h-full">
-                          {activeVideo.thumbnail_url ? (
+                          {getVideoThumbnail(activeVideo) ? (
                             <img
-                              key={`thumbnail-${activeVideo.id}`}
-                              src={activeVideo.thumbnail_url}
+                              key={`thumbnail-${activeVideo.id}-${selectedVideoIndex}`}
+                              src={getVideoThumbnail(activeVideo)!}
                               alt={activeVideo.title}
-                              className="crt-video w-full h-full object-cover relative z-0"
+                              className={`crt-video w-full h-full object-cover relative z-0 transition-all duration-500 ${
+                                selectedVideoIndex !== null && !isSpinning ? 'crt-thumbnail--selected' : ''
+                              }`}
                             />
                           ) : (
                             <div className="crt-placeholder w-full h-full flex items-center justify-center text-sm text-gray-400 relative z-0">
@@ -795,25 +1188,24 @@ export default function MainMenuPage() {
                           )}
                         </div>
                       ) : (
-                        // BANDWIDTH-SAFE: Video element - only rendered when user clicks play
-                        // preload="none" ensures no video bytes downloaded until play() is called
-                        // src is set ONLY when handleCrtPlay() is called, NOT during spin animation
-                        <video
-                          ref={crtVideoRef}
-                          key={`video-${activeVideo.id}`}
-                          src={crtVideoSrc || undefined}
-                          className="crt-video w-full h-full object-cover relative z-0"
-                          controls
-                          preload="none"
-                          poster={activeVideo.thumbnail_url || undefined}
-                          onPlay={() => setIsCrtPlaying(true)}
-                          onPause={() => setIsCrtPlaying(false)}
-                          onEnded={() => {
-                            setIsCrtPlaying(false);
-                            // Optionally reset to thumbnail after video ends
-                            // setCrtVideoSrc(null);
-                          }}
-                        />
+                        // Video Player - Vimeo only
+                        activeVideo.vimeo_id ? (
+                          <VimeoPlayer
+                            videoId={activeVideo.vimeo_id}
+                            hash={activeVideo.vimeo_hash || null}
+                            autoplay
+                            muted={false}
+                            loop={false}
+                            className="w-full h-full"
+                            aspectRatio="4/3"
+                            onPause={() => setIsCrtPlaying(false)}
+                            onEnded={() => setIsCrtPlaying(false)}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-black/50 text-white text-sm p-4 text-center">
+                            <p>No Vimeo ID available for this video.</p>
+                          </div>
+                        )
                       )}
                     </>
                   ) : (
@@ -828,13 +1220,11 @@ export default function MainMenuPage() {
                   {/* Screen Corner Details */}
                   <div className="absolute top-2 left-2 w-1 h-1 bg-white/20 rounded-full z-30" />
                   <div className="absolute top-2 right-2 w-1 h-1 bg-white/20 rounded-full z-30" />
-                  <div className="absolute bottom-2 left-2 w-1 h-1 bg-white/20 rounded-full z-30" />
-                  <div className="absolute bottom-2 right-2 w-1 h-1 bg-white/20 rounded-full z-30" />
                 </div>
               </div>
-              {/* CRT controls - Integrated Navigation Buttons */}
-              <div className="crt-controls flex items-center justify-center gap-4 sm:gap-5 w-full mt-2">
-                {/* Left Knob - Back Button */}
+              {/* CRT controls - Clean Navigation Buttons */}
+              <div className="crt-controls flex items-center justify-center gap-4 sm:gap-5 w-full mt-2 px-2">
+                {/* Left Arrow Button */}
                 {activeVideo && selectedVideoIndex != null && !isSpinning ? (
                   <button
                     onClick={() => {
@@ -845,46 +1235,18 @@ export default function MainMenuPage() {
                       }
                     }}
                     disabled={selectedVideoIndex === 0}
-                    className="crt-knob-button group relative w-[42px] h-[42px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#888,#333)] hover:bg-[radial-gradient(circle_at_30%_30%,#aaa,#444)] disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(0,0,0,0.7),inset_0_2px_4px_rgba(255,255,255,0.1)] border-2 border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center"
+                    className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center"
                     title="Previous video"
                   >
-                    <svg className="w-5 h-5 text-white opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                     </svg>
-                    {/* Knob highlight */}
-                    <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-white/20 blur-sm" />
                   </button>
                 ) : (
-                  <div className="crt-knob w-[42px] h-[42px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#666,#222)] shadow-[0_4px_12px_rgba(0,0,0,0.7)] border-2 border-gray-700" />
+                  <div className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 opacity-50" />
                 )}
                 
-                {/* Center Speaker - Visit Button */}
-                {activeVideo && selectedVideoIndex != null && !isSpinning ? (
-                  <button
-                    onClick={() => {
-                      router.push(`/videos`)
-                    }}
-                    className="crt-speaker-button group relative w-[120px] sm:w-[140px] h-[38px] rounded-[18px] bg-[repeating-linear-gradient(to_right,#444_0,#444_2px,#222_2px,#222_4px)] hover:bg-[repeating-linear-gradient(to_right,#555_0,#555_2px,#333_2px,#333_4px)] border-2 border-gray-600 hover:border-red-500/60 shadow-[0_4px_12px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(255,255,255,0.1)] transition-all duration-200 active:scale-95 flex items-center justify-center overflow-hidden"
-                    title="Visit video page"
-                  >
-                    {/* Speaker lines */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-1 px-2">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="h-4 w-[2px] bg-gray-400 group-hover:bg-red-400/60 transition-colors" />
-                      ))}
-                    </div>
-                    {/* Visit text overlay */}
-                    <span className="relative z-10 text-[10px] sm:text-xs font-bold text-white/90 group-hover:text-red-300 uppercase tracking-wider transition-colors">
-                      Visit
-                    </span>
-                    {/* Glow effect on hover */}
-                    <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/10 transition-colors rounded-[18px]" />
-                  </button>
-                ) : (
-                  <div className="crt-speaker w-[120px] sm:w-[140px] h-[38px] rounded-[18px] bg-[repeating-linear-gradient(to_right,#333_0,#333_2px,#111_2px,#111_4px)] border-2 border-gray-700" />
-                )}
-                
-                {/* Right Knob - Next Button */}
+                {/* Right Arrow Button */}
                 {activeVideo && selectedVideoIndex != null && !isSpinning ? (
                   <button
                     onClick={() => {
@@ -895,32 +1257,18 @@ export default function MainMenuPage() {
                       }
                     }}
                     disabled={selectedVideoIndex === videos.length - 1}
-                    className="crt-knob-button group relative w-[42px] h-[42px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#888,#333)] hover:bg-[radial-gradient(circle_at_30%_30%,#aaa,#444)] disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(0,0,0,0.7),inset_0_2px_4px_rgba(255,255,255,0.1)] border-2 border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center"
+                    className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center"
                     title="Next video"
                   >
-                    <svg className="w-5 h-5 text-white opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
-                    {/* Knob highlight */}
-                    <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-white/20 blur-sm" />
                   </button>
                 ) : (
-                  <div className="crt-knob w-[42px] h-[42px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#666,#222)] shadow-[0_4px_12px_rgba(0,0,0,0.7)] border-2 border-gray-700" />
+                  <div className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 opacity-50" />
                 )}
               </div>
               
-              {/* CRT TV Details - Channel Display & Power Indicator */}
-              {activeVideo && selectedVideoIndex != null && !isSpinning && (
-                <div className="flex items-center justify-center gap-4 mt-2 text-xs text-gray-400">
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-black/40 rounded border border-gray-700/50">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                    <span className="font-mono">CH {String(selectedVideoIndex + 1).padStart(2, '0')}</span>
-                  </div>
-                  <div className="px-2 py-1 bg-black/40 rounded border border-gray-700/50">
-                    <span className="font-mono">{videos.length} Videos</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

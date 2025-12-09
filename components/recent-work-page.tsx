@@ -1,63 +1,47 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { VimeoPlayer } from "@/components/VimeoPlayer"
+
+// TODO: Replace this hardcoded Vimeo ID with the actual Vimeo ID for the "FINAL whip pan" video
+// Extract the numeric ID from your Vimeo URL (e.g., if URL is https://vimeo.com/123456789, use "123456789")
+const RECENT_WORK_VIMEO_ID = "REPLACE_WITH_ACTUAL_VIMEO_ID"
 
 export function RecentWorkPage() {
-  const videoRef = useRef<HTMLVideoElement>(null)
   const [hasEnded, setHasEnded] = useState(false)
   const [isBlurred, setIsBlurred] = useState(true)
 
+  // Note: Vimeo iframe doesn't support playbackRate, so we'll remove that functionality
+  // The blur effect will be removed after a short delay instead
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    video.playbackRate = 1.2
-
-    const playVideo = async () => {
-      try {
-        await video.play()
-        setTimeout(() => {
-          setIsBlurred(false)
-        }, 300)
-      } catch (error) {
-        console.error("[v0] Video autoplay failed:", error)
-        setIsBlurred(false)
-      }
-    }
-
-    const handleLoadedData = () => {
-      video.playbackRate = 1.2
-      playVideo()
-    }
-
-    const handleEnded = () => {
-      setHasEnded(true)
-    }
-
-    video.addEventListener("loadeddata", handleLoadedData)
-    video.addEventListener("ended", handleEnded)
-
-    return () => {
-      video.removeEventListener("loadeddata", handleLoadedData)
-      video.removeEventListener("ended", handleEnded)
-    }
+    setTimeout(() => {
+      setIsBlurred(false)
+    }, 300)
   }, [])
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
-      {/* BANDWIDTH-SAFE: Changed from preload="auto" to "metadata" to prevent full video download */}
-      <video
-        ref={videoRef}
-        className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ${
-          isBlurred ? "blur-md scale-105" : "blur-0 scale-100"
-        }`}
-        preload="metadata"
-        playsInline
-        muted
-      >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/FINAL%20whip%20pan-3Ch9dxgn0OWDrNLecHkmnWLdOe8oly.mp4" type="video/mp4" />
-      </video>
+      {/* Vimeo Player - replaces native video element */}
+      <div className={`absolute inset-0 h-full w-full transition-all duration-1000 ${
+        isBlurred ? "blur-md scale-105" : "blur-0 scale-100"
+      }`}>
+        {RECENT_WORK_VIMEO_ID !== "REPLACE_WITH_ACTUAL_VIMEO_ID" ? (
+          <VimeoPlayer
+            videoId={RECENT_WORK_VIMEO_ID}
+            autoplay
+            muted
+            loop={false}
+            className="w-full h-full"
+            aspectRatio="16/9"
+            onEnded={() => setHasEnded(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-black/50">
+            <p className="text-white">Please set RECENT_WORK_VIMEO_ID in recent-work-page.tsx</p>
+          </div>
+        )}
+      </div>
 
       {hasEnded && (
         <div className="absolute inset-0 z-20 flex flex-col bg-black/60">

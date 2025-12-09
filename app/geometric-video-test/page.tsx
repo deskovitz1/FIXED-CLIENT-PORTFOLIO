@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Video } from "@/lib/db";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getVideoThumbnail } from "@/lib/utils";
 
 type TileShape = {
   clipPath: string;
@@ -187,11 +188,11 @@ export default function GeometricVideoTestPage() {
                 >
                   {/* Thumbnail background */}
                   <div className="absolute inset-0">
-                    {video.thumbnail_url ? (
+                    {getVideoThumbnail(video) ? (
                       <div
                         className="w-full h-full bg-center bg-cover scale-110 group-hover:scale-[1.15] transition-transform duration-700 ease-out"
                         style={{
-                          backgroundImage: `url(${video.thumbnail_url})`,
+                          backgroundImage: `url(${getVideoThumbnail(video)})`,
                         }}
                       />
                     ) : (

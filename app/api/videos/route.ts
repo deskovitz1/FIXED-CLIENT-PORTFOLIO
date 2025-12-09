@@ -26,10 +26,17 @@ export async function GET(request: NextRequest) {
     
     console.log(`getVideos returned ${allVideos.length} video(s)`);
     
+    // Log vimeo_id for debugging
+    console.log("Videos with vimeo_id:", allVideos.map(v => ({ id: v.id, title: v.title, vimeo_id: v.vimeo_id })));
+    
     // BANDWIDTH-SAFE: Add aggressive caching headers for video metadata
     // Video URLs in response are immutable Blob URLs, safe to cache for 1 year
+    // BUT: Disable caching when vimeo_id is being updated frequently during development
     const response = NextResponse.json({ videos: allVideos });
-    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    // Temporarily disable caching to ensure fresh data during vimeo_id migration
+    // TODO: Re-enable caching after migration is complete
+    // response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     return response;
   } catch (error) {
     console.error("Error fetching videos:", error);

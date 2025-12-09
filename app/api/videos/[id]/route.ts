@@ -211,9 +211,9 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, description, category, display_date, is_visible, thumbnail_url } = body;
+    const { title, description, category, display_date, is_visible, thumbnail_url, vimeo_id, vimeo_hash } = body;
 
-    console.log(`[PATCH /api/videos/${id}] Updating video:`, { title, description, category, display_date, is_visible, thumbnail_url });
+    console.log(`[PATCH /api/videos/${id}] Updating video:`, { title, description, category, display_date, is_visible, thumbnail_url, vimeo_id, vimeo_hash });
 
     // Build update data with only provided fields
     const updateData: any = {};
@@ -223,6 +223,8 @@ export async function PATCH(
     if (display_date !== undefined) updateData.display_date = display_date;
     if (is_visible !== undefined) updateData.is_visible = is_visible;
     if (thumbnail_url !== undefined) updateData.thumbnail_url = thumbnail_url;
+    if (vimeo_id !== undefined) updateData.vimeo_id = vimeo_id;
+    if (vimeo_hash !== undefined) updateData.vimeo_hash = vimeo_hash;
 
     console.log(`[PATCH /api/videos/${id}] Update data:`, updateData);
 
@@ -241,7 +243,11 @@ export async function PATCH(
         id: video.id,
         title: video.title,
         display_date: video.display_date,
-        requested_display_date: display_date
+        vimeo_id: video.vimeo_id,
+        vimeo_hash: video.vimeo_hash,
+        requested_display_date: display_date,
+        requested_vimeo_id: vimeo_id,
+        requested_vimeo_hash: vimeo_hash
       });
       
       // Check if display_date was requested but not saved (column might not exist)
@@ -250,6 +256,24 @@ export async function PATCH(
         return NextResponse.json({ 
           video,
           warning: "Date field may not be saved. Please ensure display_date column exists in database."
+        });
+      }
+      
+      // Check if vimeo_id was requested but not saved (column might not exist)
+      if (vimeo_id !== undefined && !video.vimeo_id && vimeo_id !== null) {
+        console.warn(`[PATCH /api/videos/${id}] WARNING: vimeo_id was requested but not saved. Column may not exist.`);
+        return NextResponse.json({
+          video,
+          warning: "Vimeo ID field may not be saved. Please run database migration: pnpm db:push && pnpm db:generate"
+        });
+      }
+      
+      // Check if vimeo_hash was requested but not saved (column might not exist)
+      if (vimeo_hash !== undefined && !video.vimeo_hash && vimeo_hash !== null) {
+        console.warn(`[PATCH /api/videos/${id}] WARNING: vimeo_hash was requested but not saved. Column may not exist.`);
+        return NextResponse.json({
+          video,
+          warning: "Vimeo hash field may not be saved. Please run database migration: pnpm db:push && pnpm db:generate"
         });
       }
       
@@ -262,6 +286,21 @@ export async function PATCH(
       console.error(`[PATCH /api/videos/${id}] Error meta:`, updateError?.meta);
       if (updateError?.stack) {
         console.error(`[PATCH /api/videos/${id}] Error stack:`, updateError.stack);
+      }
+      
+      // Check if error is about missing vimeo_id or vimeo_hash column
+      const errorMsg = (updateError?.message || '').toLowerCase();
+      if ((errorMsg.includes('vimeo_id') || errorMsg.includes('vimeo_hash')) && (errorMsg.includes('does not exist') || errorMsg.includes('column'))) {
+        const missingColumn = errorMsg.includes('vimeo_hash') ? 'vimeo_hash' : 'vimeo_id';
+        return NextResponse.json(
+          { 
+            error: "Failed to update video",
+            details: `The ${missingColumn} column doesn't exist in your database. Please run: pnpm db:push && pnpm db:generate`,
+            errorCode: updateError?.code,
+            suggestion: `Run database migration to add ${missingColumn} column`
+          },
+          { status: 500 }
+        );
       }
       
       return NextResponse.json(

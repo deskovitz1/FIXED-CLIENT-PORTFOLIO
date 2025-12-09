@@ -7,6 +7,8 @@ import { Play, Calendar, Bug, X, AlertCircle, Edit2, Trash2, Save, XCircle, Plus
 import { upload } from '@vercel/blob/client'
 import { useAdmin } from "@/contexts/AdminContext"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { parseVimeoUrl } from "@/lib/vimeo-url-parser"
+import { getVideoThumbnail } from "@/lib/utils"
 
 interface DebugLog {
   timestamp: string
@@ -56,11 +58,30 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
   const [description, setDescription] = useState(video.description ?? '')
   const [category, setCategory] = useState(video.category || null)
   const [displayDate, setDisplayDate] = useState(video.display_date ? video.display_date.split('T')[0] : '')
+  const [vimeoId, setVimeoId] = useState(video.vimeo_id || '')
+  const [vimeoHash, setVimeoHash] = useState(video.vimeo_hash || '')
   const [saving, setSaving] = useState(false)
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
   const [showActions, setShowActions] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync form state when video prop changes or editing starts
+  useEffect(() => {
+    if (editing) {
+      setTitle(video.title)
+      setDescription(video.description ?? '')
+      setCategory(video.category || null)
+      setDisplayDate(video.display_date ? video.display_date.split('T')[0] : '')
+      setVimeoId(video.vimeo_id || '')
+      setVimeoHash(video.vimeo_hash || '')
+      console.log('[FeaturedVideoItem] Form state synced for editing:', {
+        id: video.id,
+        vimeo_id: video.vimeo_id,
+        vimeo_hash: video.vimeo_hash
+      })
+    }
+  }, [editing, video.id, video.vimeo_id, video.vimeo_hash])
 
   async function save() {
     setSaving(true)
@@ -68,7 +89,9 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
       console.log('[FeaturedVideoItem] Saving video:', {
         id: video.id,
         title,
-        display_date: displayDate || null
+        display_date: displayDate || null,
+        vimeo_id: vimeoId || null,
+        vimeo_hash: vimeoHash || null
       });
       
       const res = await fetch(`/api/videos/${video.id}`, {
@@ -78,7 +101,9 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
           title, 
           description, 
           category,
-          display_date: displayDate || null
+          display_date: displayDate || null,
+          vimeo_id: vimeoId || null,
+          vimeo_hash: vimeoHash || null
         }),
       })
 
@@ -111,6 +136,13 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
         const savedDate = result.video.display_date ? result.video.display_date.split('T')[0] : '';
         console.log('[FeaturedVideoItem] Setting displayDate to:', savedDate);
         setDisplayDate(savedDate);
+        
+        // Update vimeoId and vimeoHash from saved video
+        const savedVimeoId = result.video.vimeo_id || '';
+        const savedVimeoHash = result.video.vimeo_hash || '';
+        console.log('[FeaturedVideoItem] Setting vimeoId to:', savedVimeoId, 'vimeoHash to:', savedVimeoHash);
+        setVimeoId(savedVimeoId);
+        setVimeoHash(savedVimeoHash);
       }
       
       setEditing(false)
@@ -217,6 +249,49 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
               className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Vimeo URL or ID (optional - paste full URL or just ID)
+            </label>
+            <input
+              type="text"
+              value={vimeoId}
+              onChange={(e) => {
+                const value = e.target.value
+                // Always try to parse URL - it handles both URLs and plain IDs
+                const parsed = parseVimeoUrl(value)
+                if (parsed.videoId) {
+                  // If we got a parsed ID, use it (extracted from URL or just the ID itself)
+                  setVimeoId(parsed.videoId)
+                  // Set hash if found, otherwise clear it
+                  setVimeoHash(parsed.hash || '')
+                } else {
+                  // If parsing failed, just use the raw value (might be partial input)
+                  setVimeoId(value)
+                }
+              }}
+              placeholder="https://vimeo.com/123456789/ab8ee4cce4 or 123456789"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Paste full Vimeo URL (e.g., https://vimeo.com/123456789/ab8ee4cce4) or just the ID
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Vimeo Hash (for unlisted videos, optional)
+            </label>
+            <input
+              type="text"
+              value={vimeoHash}
+              onChange={(e) => setVimeoHash(e.target.value)}
+              placeholder="ab8ee4cce4"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Only needed for unlisted videos. Found after the ID in the URL (e.g., /123456789/<strong>ab8ee4cce4</strong>)
+            </p>
+          </div>
           <div className="flex gap-2 items-center flex-wrap">
             <select
               value={category || ''}
@@ -241,9 +316,9 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
                 disabled={uploadingThumbnail}
               />
             </label>
-            {video.thumbnail_url && (
+            {getVideoThumbnail(video) && (
               <div className="flex items-center gap-2 text-xs text-gray-400">
-                <img src={video.thumbnail_url} alt="Thumbnail" className="w-8 h-8 object-cover rounded" />
+                <img src={getVideoThumbnail(video)!} alt="Thumbnail" className="w-8 h-8 object-cover rounded" />
                 <span>Has thumbnail</span>
               </div>
             )}
@@ -265,6 +340,7 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
                 setDescription(video.description ?? '')
                 setCategory(video.category || null)
                 setDisplayDate(video.display_date ? video.display_date.split('T')[0] : '')
+                setVimeoId(video.vimeo_id || '')
               }}
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-200 rounded text-sm flex items-center gap-2"
             >
@@ -317,51 +393,24 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
       >
         {/* Featured Video Thumbnail */}
         <div className="relative aspect-video rounded-lg overflow-hidden mb-4 bg-black">
-          {/* BANDWIDTH-SAFE: Featured video - preload="none", only loads when user clicks */}
-          {videoUrl ? (
-            <>
-              <video
-                ref={(el) => {
-                  if (el) {
-                    videoRefs.current.set(video.id, el)
-                  } else {
-                    videoRefs.current.delete(video.id)
-                  }
-                }}
-                src={videoUrl}
-                poster={video.thumbnail_url || undefined}
-                className="w-full h-full object-cover"
-                preload="none"
-                muted
-                playsInline
-                onLoadedMetadata={(e) => onVideoLoad(video.id, e)}
-                onError={(e) => onVideoError(video.id, e)}
-                onWaiting={() => setIsLoading(true)}
-                onCanPlay={() => setIsLoading(false)}
-                onPlaying={() => setIsLoading(false)}
-                onClick={(e) => {
-                  // Only load video when user explicitly clicks to play
-                  const videoEl = e.currentTarget
-                  if (videoEl.readyState < 2) {
-                    videoEl.load()
-                  }
-                  videoEl.play().catch((err) => {
-                    console.error("Play failed:", err)
-                  })
-                }}
-              />
-              {/* Loading Spinner Overlay */}
-              {isLoading && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-                  <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-            </>
+          {/* Show thumbnail image - video plays in modal via VimeoPlayer */}
+          {getVideoThumbnail(video) ? (
+            <img
+              src={getVideoThumbnail(video)!}
+              alt={video.title}
+              className="w-full h-full object-cover"
+            />
+          ) : video.vimeo_id ? (
+            // If no thumbnail but has Vimeo ID, we could fetch thumbnail from Vimeo API
+            // For now, show placeholder
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+              <p className="text-gray-400 text-sm">No thumbnail</p>
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-red-900/30 border-2 border-red-500">
               <div className="text-center p-4">
                 <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                <p className="text-xs text-red-300">No video URL</p>
+                <p className="text-xs text-red-300">No Vimeo ID</p>
                 <p className="text-[10px] text-red-400 mt-1">
                   ID: {video.id}
                 </p>
@@ -490,11 +539,30 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
   const [description, setDescription] = useState(video.description ?? '')
   const [category, setCategory] = useState(video.category || null)
   const [displayDate, setDisplayDate] = useState(video.display_date ? video.display_date.split('T')[0] : '')
+  const [vimeoId, setVimeoId] = useState(video.vimeo_id || '')
+  const [vimeoHash, setVimeoHash] = useState(video.vimeo_hash || '')
   const [saving, setSaving] = useState(false)
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
   const [showActions, setShowActions] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync form state when video prop changes or editing starts
+  useEffect(() => {
+    if (editing) {
+      setTitle(video.title)
+      setDescription(video.description ?? '')
+      setCategory(video.category || null)
+      setDisplayDate(video.display_date ? video.display_date.split('T')[0] : '')
+      setVimeoId(video.vimeo_id || '')
+      setVimeoHash(video.vimeo_hash || '')
+      console.log('[VideoItem] Form state synced for editing:', {
+        id: video.id,
+        vimeo_id: video.vimeo_id,
+        vimeo_hash: video.vimeo_hash
+      })
+    }
+  }, [editing, video.id, video.vimeo_id, video.vimeo_hash])
 
   async function save() {
     setSaving(true)
@@ -502,7 +570,9 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
       console.log('[VideoItem] Saving video:', {
         id: video.id,
         title,
-        display_date: displayDate || null
+        display_date: displayDate || null,
+        vimeo_id: vimeoId || null,
+        vimeo_hash: vimeoHash || null
       });
       
       const res = await fetch(`/api/videos/${video.id}`, {
@@ -512,7 +582,9 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
           title, 
           description, 
           category,
-          display_date: displayDate || null
+          display_date: displayDate || null,
+          vimeo_id: vimeoId || null,
+          vimeo_hash: vimeoHash || null
         }),
       })
 
@@ -545,6 +617,13 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
         const savedDate = result.video.display_date ? result.video.display_date.split('T')[0] : '';
         console.log('[VideoItem] Setting displayDate to:', savedDate);
         setDisplayDate(savedDate);
+        
+        // Update vimeoId and vimeoHash from saved video
+        const savedVimeoId = result.video.vimeo_id || '';
+        const savedVimeoHash = result.video.vimeo_hash || '';
+        console.log('[VideoItem] Setting vimeoId to:', savedVimeoId, 'vimeoHash to:', savedVimeoHash);
+        setVimeoId(savedVimeoId);
+        setVimeoHash(savedVimeoHash);
       }
       
       setEditing(false)
@@ -650,6 +729,49 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
             className="w-full px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-gray-100 focus:outline-none focus:border-red-500"
           />
         </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-300 mb-1">
+            Vimeo URL or ID (optional)
+          </label>
+          <input
+            type="text"
+            value={vimeoId}
+            onChange={(e) => {
+              const value = e.target.value
+              // Always try to parse URL - it handles both URLs and plain IDs
+              const parsed = parseVimeoUrl(value)
+              if (parsed.videoId) {
+                // If we got a parsed ID, use it (extracted from URL or just the ID itself)
+                setVimeoId(parsed.videoId)
+                // Set hash if found, otherwise clear it
+                setVimeoHash(parsed.hash || '')
+              } else {
+                // If parsing failed, just use the raw value (might be partial input)
+                setVimeoId(value)
+              }
+            }}
+            placeholder="https://vimeo.com/123456789/ab8ee4cce4 or 123456789"
+            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-gray-100 focus:outline-none focus:border-red-500"
+          />
+          <p className="text-[10px] text-gray-400 mt-0.5">
+            Paste full URL or just ID
+          </p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-300 mb-1">
+            Vimeo Hash (unlisted videos, optional)
+          </label>
+          <input
+            type="text"
+            value={vimeoHash}
+            onChange={(e) => setVimeoHash(e.target.value)}
+            placeholder="ab8ee4cce4"
+            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-gray-100 focus:outline-none focus:border-red-500"
+          />
+          <p className="text-[10px] text-gray-400 mt-0.5">
+            Only for unlisted videos
+          </p>
+        </div>
         <div className="flex gap-2 items-center flex-wrap">
           <select
             value={category || ''}
@@ -674,8 +796,8 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
               disabled={uploadingThumbnail}
             />
           </label>
-          {video.thumbnail_url && (
-            <img src={video.thumbnail_url} alt="Thumbnail" className="w-6 h-6 object-cover rounded" />
+          {getVideoThumbnail(video) && (
+            <img src={getVideoThumbnail(video)!} alt="Thumbnail" className="w-6 h-6 object-cover rounded" />
           )}
         </div>
         <div className="flex gap-2">
@@ -695,6 +817,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
                 setDescription(video.description ?? '')
                 setCategory(video.category || null)
                 setDisplayDate(video.display_date ? video.display_date.split('T')[0] : '')
+                setVimeoId(video.vimeo_id || '')
               }}
               className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-200 rounded text-xs flex items-center justify-center gap-1"
             >
@@ -744,54 +867,18 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
     >
       {/* Sidebar Video Thumbnail */}
       <div className="relative w-40 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-black">
-        {/* BANDWIDTH-SAFE: Grid video - preload="none", only loads when user clicks */}
-        {videoUrl ? (
-          <>
-            <video
-              ref={(el) => {
-                if (el) {
-                  videoRefs.current.set(video.id, el)
-                  // Observe video element for lazy loading
-                  if (observerRef.current) {
-                    observerRef.current.observe(el)
-                  }
-                } else {
-                  const oldEl = videoRefs.current.get(video.id)
-                  if (oldEl && observerRef.current) {
-                    observerRef.current.unobserve(oldEl)
-                  }
-                  videoRefs.current.delete(video.id)
-                }
-              }}
-              src={videoUrl}
-              poster={video.thumbnail_url || undefined}
-              className="w-full h-full object-cover"
-              preload="none"
-              muted
-              playsInline
-              onLoadedMetadata={(e) => onVideoLoad(video.id, e)}
-              onError={(e) => onVideoError(video.id, e)}
-              onWaiting={() => setIsLoading(true)}
-              onCanPlay={() => setIsLoading(false)}
-              onPlaying={() => setIsLoading(false)}
-              onClick={(e) => {
-                // Only load video when user explicitly clicks to play
-                const videoEl = e.currentTarget
-                if (videoEl.readyState < 2) {
-                  videoEl.load()
-                }
-                videoEl.play().catch((err) => {
-                  console.error("Play failed:", err)
-                })
-              }}
-            />
-            {/* Loading Spinner Overlay */}
-            {isLoading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-          </>
+        {/* Show thumbnail image - video plays in modal via VimeoPlayer */}
+        {getVideoThumbnail(video) ? (
+          <img
+            src={getVideoThumbnail(video)!}
+            alt={video.title}
+            className="w-full h-full object-cover"
+          />
+        ) : video.vimeo_id ? (
+          // If no thumbnail but has Vimeo ID, show placeholder
+          <div className="w-full h-full flex items-center justify-center bg-gray-800">
+            <p className="text-gray-400 text-xs">No thumbnail</p>
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-red-900/30">
             <AlertCircle className="w-4 h-4 text-red-400" />
@@ -977,6 +1064,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
           id: v.id,
           title: v.title,
           display_date: v.display_date,
+          vimeo_id: v.vimeo_id,
           blob_url: v.blob_url?.substring(0, 50) + "...",
           video_url: v.video_url?.substring(0, 50) + "...",
         }))
@@ -988,7 +1076,8 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
         console.log('[fetchVideos] Setting featured video:', {
           id: loadedVideos[0].id,
           title: loadedVideos[0].title,
-          display_date: loadedVideos[0].display_date
+          display_date: loadedVideos[0].display_date,
+          vimeo_id: loadedVideos[0].vimeo_id
         });
         setFeaturedVideo(loadedVideos[0]) // First video is the most recent
       } else {
@@ -1165,13 +1254,37 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   const handleAddVideo = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    const fileInput = formData.get('file') as File
+    const fileInput = formData.get('file') as File | null
     const title = formData.get('title') as string
     const description = formData.get('description') as string
     const category = formData.get('category') as string
+    const vimeoId = formData.get('vimeo_id') as string
+    const vimeoHash = formData.get('vimeo_hash') as string
 
-    if (!fileInput || !title) {
-      alert('Please select a video file and enter a title')
+    // Always try to parse URL - it handles both URLs and plain IDs
+    let parsedId = vimeoId || ''
+    let parsedHash = vimeoHash || ''
+    if (vimeoId) {
+      try {
+        const parsed = parseVimeoUrl(vimeoId)
+        if (parsed.videoId) {
+          parsedId = parsed.videoId
+          parsedHash = parsed.hash || vimeoHash || '' // Use parsed hash, or keep existing hash, or empty
+        }
+      } catch (err) {
+        console.warn('Failed to parse Vimeo URL:', err)
+        // Fall back to using vimeoId as-is
+      }
+    }
+
+    // Validation: Need either file OR vimeo_id, and always need title
+    if (!title) {
+      alert('Please enter a title')
+      return
+    }
+
+    if (!fileInput && !parsedId) {
+      alert('Please either upload a video file OR enter a Vimeo ID')
       return
     }
 
@@ -1179,7 +1292,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
     setUploadProgress(0)
     setUploadSpeed(null)
     setUploadLoaded(0)
-    setUploadTotal(fileInput.size)
+    setUploadTotal(fileInput?.size || 0)
     uploadStartTimeRef.current = performance.now()
 
     // Create abort controller for cancellation
@@ -1187,46 +1300,64 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
     uploadAbortControllerRef.current = abortController
 
     try {
-      // Step 1: Upload file directly to Vercel Blob (client-side)
-      console.log('📤 Starting client-side blob upload...')
-      
-      const blob = await upload(fileInput.name, fileInput, {
-        access: 'public',
-        handleUploadUrl: '/api/blob-upload',
-        multipart: true, // Important for large files
-        onUploadProgress: (progress) => {
-          // Update progress from the blob upload
-          const percentComplete = Math.min((progress.loaded / progress.total) * 100, 95)
-          
-          // Calculate MB/s
-          if (uploadStartTimeRef.current !== null) {
-            const elapsedSec = (performance.now() - uploadStartTimeRef.current) / 1000
-            const mbUploaded = progress.loaded / (1024 * 1024)
-            const mbPerSec = elapsedSec > 0 ? mbUploaded / elapsedSec : 0
-            
-            setUploadProgress(percentComplete)
-            setUploadSpeed(mbPerSec)
-            setUploadLoaded(progress.loaded)
-            setUploadTotal(progress.total)
-          }
-        },
-      })
+      let blobUrl: string | null = null
+      let blobPath: string | null = null
+      let fileName = 'vimeo-video'
+      let fileSize: number | null = null
 
-      console.log('✅ Blob upload completed:', blob.url)
-      setUploadProgress(95)
+      // Step 1: Upload file to Blob ONLY if no Vimeo ID provided
+      if (fileInput && !vimeoId) {
+        console.log('📤 Starting client-side blob upload...')
+        
+        const blob = await upload(fileInput.name, fileInput, {
+          access: 'public',
+          handleUploadUrl: '/api/blob-upload',
+          multipart: true, // Important for large files
+          onUploadProgress: (progress) => {
+            // Update progress from the blob upload
+            const percentComplete = Math.min((progress.loaded / progress.total) * 100, 95)
+            
+            // Calculate MB/s
+            if (uploadStartTimeRef.current !== null) {
+              const elapsedSec = (performance.now() - uploadStartTimeRef.current) / 1000
+              const mbUploaded = progress.loaded / (1024 * 1024)
+              const mbPerSec = elapsedSec > 0 ? mbUploaded / elapsedSec : 0
+              
+              setUploadProgress(percentComplete)
+              setUploadSpeed(mbPerSec)
+              setUploadLoaded(progress.loaded)
+              setUploadTotal(progress.total)
+            }
+          },
+        })
+
+        console.log('✅ Blob upload completed:', blob.url)
+        blobUrl = blob.url
+        blobPath = blob.pathname
+        fileName = fileInput.name
+        fileSize = fileInput.size
+        setUploadProgress(95)
+      } else if (parsedId || vimeoId) {
+        // If using Vimeo, skip file upload
+        console.log('📤 Using Vimeo video, skipping file upload...')
+        setUploadProgress(50) // Show some progress
+        fileName = `vimeo-${parsedId || vimeoId}`
+      }
 
       // Step 2: Save video metadata to database
       const response = await fetch('/api/videos/create-from-blob', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          blobUrl: blob.url,
-          blobPath: blob.pathname,
+          blobUrl: blobUrl,
+          blobPath: blobPath,
           title,
           description: description || null,
           category: category || null,
-          file_name: fileInput.name,
-          file_size: fileInput.size,
+          file_name: fileName,
+          file_size: fileSize,
+          vimeo_id: parsedId || vimeoId || null,
+          vimeo_hash: parsedHash || vimeoHash || null,
         }),
       })
 
@@ -1302,12 +1433,14 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
     
     console.log("Selected video:", video)
     console.log("Video URL for modal:", videoUrl)
+    console.log("Video vimeo_id:", video.vimeo_id)
     
     addDebugLog("info", "Video clicked", { 
       id: video.id, 
       title: video.title,
       video_url: video.video_url,
       blob_url: video.blob_url,
+      vimeo_id: video.vimeo_id,
       final_url: videoUrl
     })
     
@@ -1523,8 +1656,15 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
               </a>
             </nav>
           </div>
-          {isAdmin && (
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+            {/* Contact button */}
+            <a
+              href="mailto:info@circusseventeen.com"
+              className="px-4 py-2 text-sm bg-transparent border border-white/30 hover:bg-red-500/90 hover:border-red-500/90 text-white rounded-full transition-colors"
+            >
+              Contact Us
+            </a>
+            {isAdmin && (
               <button
                 onClick={() => setShowAddVideo(true)}
                 className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors flex items-center gap-2"
@@ -1532,8 +1672,8 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                 <Plus className="w-4 h-4" />
                 Add Video
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
@@ -1561,16 +1701,18 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
             <form ref={addVideoFormRef} onSubmit={handleAddVideo} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Video File <span className="text-red-500">*</span>
+                  Video File (optional if using Vimeo ID)
                 </label>
                 <input
                   type="file"
                   name="file"
                   accept="video/*"
-                  required
                   disabled={uploading}
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-red-600 file:text-white hover:file:bg-red-700"
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  Upload a video file OR use Vimeo ID below (at least one required)
+                </p>
               </div>
 
               <div>
@@ -1616,6 +1758,39 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                   <option value="live-events">LIVE EVENTS</option>
                   <option value="bts">BTS</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Vimeo ID (optional - use this instead of uploading a file)
+                </label>
+                <input
+                  type="text"
+                  name="vimeo_id"
+                  disabled={uploading}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500"
+                  placeholder="https://vimeo.com/123456789 or 123456789"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Paste full Vimeo URL (e.g., https://vimeo.com/123456789/ab8ee4cce4) or just the ID
+                  <br />
+                  <strong className="text-gray-300">If you provide a Vimeo ID, you don't need to upload a file.</strong>
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Vimeo Hash (for unlisted videos, optional)
+                </label>
+                <input
+                  type="text"
+                  name="vimeo_hash"
+                  disabled={uploading}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500"
+                  placeholder="ab8ee4cce4"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Only needed for unlisted videos. Found after the ID in the URL (e.g., /123456789/<strong>ab8ee4cce4</strong>)
+                </p>
               </div>
 
               {uploading && (
@@ -1702,7 +1877,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             {/* Main Video Area (YouTube-style - Larger) */}
-            <div className="flex-1 lg:max-w-[70%]">
+            <div className="flex-1 lg:max-w-[65%]">
               {featuredVideo && (
                 <FeaturedVideoItem
                   video={featuredVideo}
@@ -1727,7 +1902,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
             </div>
 
             {/* Sidebar Videos (Right Side - YouTube-style sidebar) */}
-            <div className="lg:w-[30%] lg:max-w-[400px] space-y-3">
+            <div className="lg:w-[35%] lg:max-w-[450px] space-y-3">
               <h3 className="text-sm font-semibold text-gray-300 mb-3 hidden lg:block">Up Next</h3>
               {videos
                 .filter((video) => video.id !== featuredVideo?.id)

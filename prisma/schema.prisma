@@ -24,6 +24,8 @@ model Video {
   display_date DateTime? @db.Timestamp
   is_visible   Boolean?  @default(true)
   sort_order   Int       @default(0) @map("sort_order")
+  vimeo_id     String?   @db.VarChar(50) // Vimeo video ID (numeric string)
+  vimeo_hash   String?   @db.VarChar(255) // Vimeo hash for unlisted videos (e.g., "ab8ee4cce4")
   created_at   DateTime  @default(now())
   updated_at   DateTime  @default(now()) @updatedAt
 
@@ -31,6 +33,7 @@ model Video {
   @@index([created_at(sort: Desc)])
   @@index([display_date(sort: Desc)])
   @@index([sort_order])
+  @@index([vimeo_id])
   @@map("videos")
 }
 
