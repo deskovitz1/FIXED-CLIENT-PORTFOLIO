@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getVideos, createVideo, getIntroVideo } from "@/lib/db";
 
-function requireAdmin() {
-  const store = cookies();
+async function requireAdmin() {
+  const store = await cookies();
   const admin = store.get('admin')?.value;
   if (admin !== '1') {
     const err: any = new Error('NOT_ADMIN');
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 // The file is already uploaded directly to Blob storage by the client
 export async function POST(request: NextRequest) {
   try {
-    requireAdmin();
+    await requireAdmin();
     console.log("POST /api/videos - Saving video metadata");
     
     const body = await request.json();

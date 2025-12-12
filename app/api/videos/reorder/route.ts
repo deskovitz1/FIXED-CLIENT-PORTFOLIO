@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
-function requireAdmin() {
-  const store = cookies();
+async function requireAdmin() {
+  const store = await cookies();
   const admin = store.get('admin')?.value;
   if (admin !== '1') {
     const err: any = new Error('NOT_ADMIN');
@@ -15,7 +15,7 @@ function requireAdmin() {
 // POST - Reorder videos by updating sort_order
 export async function POST(request: NextRequest) {
   try {
-    requireAdmin();
+    await requireAdmin();
     
     const body = await request.json();
     const { videoIds } = body; // Array of video IDs in the desired order

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createVideo } from "@/lib/db";
 
-function requireAdmin() {
-  const store = cookies();
+async function requireAdmin() {
+  const store = await cookies();
   const admin = store.get('admin')?.value;
   if (admin !== '1') {
     const err: any = new Error('NOT_ADMIN');
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   const saveStartTime = Date.now();
   
   try {
-    requireAdmin();
+    await requireAdmin();
     const body = await request.json();
     const { 
       blobUrl, 
