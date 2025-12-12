@@ -1,4 +1,9 @@
+"use client"
+
 import { VideoHomepage } from "@/components/video-homepage"
+import { VideoPagePassword } from "@/components/VideoPagePassword"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 /**
  * BANDWIDTH AUDIT SUMMARY - Video Loading Behavior
@@ -28,10 +33,25 @@ import { VideoHomepage } from "@/components/video-homepage"
  * - API responses cached for 1 year (immutable Blob URLs)
  * - Videos load only on explicit user interaction
  */
-interface VideosPageProps {
-  searchParams: { category?: string }
+function VideosPageContent() {
+  const searchParams = useSearchParams()
+  const category = searchParams?.get('category') || undefined
+
+  return (
+    <VideoPagePassword>
+      <VideoHomepage initialCategory={category} />
+    </VideoPagePassword>
+  )
 }
 
-export default function VideosPage({ searchParams }: VideosPageProps) {
-  return <VideoHomepage initialCategory={searchParams.category} />
+export default function VideosPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#05060A] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <VideosPageContent />
+    </Suspense>
+  )
 }

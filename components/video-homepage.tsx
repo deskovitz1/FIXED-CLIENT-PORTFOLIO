@@ -3,19 +3,12 @@
 import { useEffect, useState, useRef } from "react"
 import { Video } from "@/lib/db"
 import { VideoPlayer } from "@/components/video-player"
-import { Play, Calendar, Bug, X, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown } from "lucide-react"
+import { Play, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown } from "lucide-react"
 import { upload } from '@vercel/blob/client'
 import { useAdmin } from "@/contexts/AdminContext"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { parseVimeoUrl } from "@/lib/vimeo-url-parser"
 import { getVideoThumbnail } from "@/lib/utils"
-
-interface DebugLog {
-  timestamp: string
-  type: "info" | "error" | "warning" | "success"
-  message: string
-  data?: any
-}
 
 interface VideoHomepageProps {
   initialCategory?: string
@@ -43,12 +36,19 @@ interface FeaturedVideoItemProps {
 
 const CATEGORIES = [
   { value: null, label: 'None (No Category)' },
-  { value: 'music-video', label: 'Music' },
-  { value: 'industry-work', label: 'Launch Videos' },
-  { value: 'clothing', label: 'Clothing' },
+  { value: 'music-video', label: 'MUSIC' },
+  { value: 'industry-work', label: 'LAUNCH VIDEOS' },
+  { value: 'clothing', label: 'CLOTHING' },
   { value: 'live-events', label: 'LIVE EVENTS' },
   { value: 'bts', label: 'BTS' },
 ]
+
+// Helper function to format category for display
+function formatCategory(category: string | null): string {
+  if (!category) return ''
+  const cat = CATEGORIES.find(c => c.value === category)
+  return cat ? cat.label : category.toUpperCase().replace(/-/g, ' ')
+}
 
 function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoLoad, onVideoError, formatDate, onReorder, canMoveUp, canMoveDown, isDragging, isDragOver, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd }: FeaturedVideoItemProps) {
   const { isAdmin } = useAdmin()
@@ -436,17 +436,6 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
           <h2 className="font-semibold text-lg mb-2 text-gray-100 transition-colors group-hover:text-red-300">
             {video.title}
           </h2>
-          <div className="flex items-center gap-3 text-sm text-gray-400 mb-2">
-            {video.category && (
-              <span className="px-3 py-1 rounded-full bg-red-900/50 text-red-200 border border-red-500/40">
-                {video.category}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {formatDate(video.created_at)}
-            </span>
-          </div>
           {video.description && (
             <p className="text-sm text-gray-300 line-clamp-3">
               {video.description}
@@ -906,17 +895,6 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
             {video.description}
           </p>
         )}
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          {video.category && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-900/50 text-red-200 border border-red-500/40">
-              {video.category}
-            </span>
-          )}
-          <span className="flex items-center gap-1">
-            <Calendar className="w-2.5 h-2.5" />
-            {formatDate(video.created_at)}
-          </span>
-        </div>
       </div>
 
       {/* Edit/Delete/Reorder Actions */}
@@ -984,8 +962,6 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   const [draggedVideoId, setDraggedVideoId] = useState<number | null>(null)
   const [dragOverVideoId, setDragOverVideoId] = useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null)
-  const [showDebug, setShowDebug] = useState(false)
-  const [debugLogs, setDebugLogs] = useState<DebugLog[]>([])
   const [featuredVideo, setFeaturedVideo] = useState<Video | null>(null)
   const [showAddVideo, setShowAddVideo] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -999,19 +975,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   const uploadAbortControllerRef = useRef<AbortController | null>(null) // For client-side blob upload cancellation
   const observerRef = useRef<IntersectionObserver | null>(null)
 
-  const addDebugLog = (type: DebugLog["type"], message: string, data?: any) => {
-    const log: DebugLog = {
-      timestamp: new Date().toLocaleTimeString(),
-      type,
-      message,
-      data,
-    }
-    setDebugLogs((prev) => [...prev.slice(-49), log]) // Keep last 50 logs
-    console.log(`[${type.toUpperCase()}] ${message}`, data || "")
-  }
-
   useEffect(() => {
-    addDebugLog("info", "Component mounted, fetching videos...", { initialCategory })
     // Fetch videos with initial category if provided
     if (initialCategory) {
       setSelectedCategory(initialCategory)
@@ -1024,24 +988,15 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   const fetchVideos = async (category?: string) => {
     try {
       setLoading(true)
-      addDebugLog("info", "Fetching videos...", { category: category || "all" })
       const url = category 
         ? `/api/videos?category=${encodeURIComponent(category)}`
         : "/api/videos"
       
       // Disable caching to always get fresh data (visibility changes should be immediate)
       const response = await fetch(url, { cache: 'no-store' })
-      addDebugLog("info", "API response received", { 
-        status: response.status, 
-        ok: response.ok 
-      })
       
       if (!response.ok) {
         const errorText = await response.text()
-        addDebugLog("error", "API request failed", { 
-          status: response.status, 
-          error: errorText 
-        })
         throw new Error(`API error: ${response.status}`)
       }
       
@@ -1059,16 +1014,6 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
         created_at: v.created_at
       })));
       
-      addDebugLog("success", `Loaded ${loadedVideos.length} videos (after filtering hidden)`, {
-        videos: loadedVideos.map((v: Video) => ({
-          id: v.id,
-          title: v.title,
-          display_date: v.display_date,
-          vimeo_id: v.vimeo_id,
-          blob_url: v.blob_url?.substring(0, 50) + "...",
-          video_url: v.video_url?.substring(0, 50) + "...",
-        }))
-      })
       setVideos(loadedVideos)
       // Set first video as featured (most recent by display_date or created_at)
       // Videos are already sorted by getVideos (display_date DESC, then created_at DESC)
@@ -1084,7 +1029,6 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
         setFeaturedVideo(null)
       }
     } catch (error) {
-      addDebugLog("error", "Error fetching videos", { error })
       console.error("Error fetching videos:", error)
     } finally {
       setLoading(false)
@@ -1106,13 +1050,11 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   // }, [featuredVideo])
 
   const handleCategoryClick = (category: string) => {
-    addDebugLog("info", "Category clicked", { category })
     setSelectedCategory(category)
     fetchVideos(category)
   }
 
   const handleAllVideosClick = () => {
-    addDebugLog("info", "All videos clicked")
     setSelectedCategory(null)
     fetchVideos()
   }
@@ -1435,14 +1377,6 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
     console.log("Video URL for modal:", videoUrl)
     console.log("Video vimeo_id:", video.vimeo_id)
     
-    addDebugLog("info", "Video clicked", { 
-      id: video.id, 
-      title: video.title,
-      video_url: video.video_url,
-      blob_url: video.blob_url,
-      vimeo_id: video.vimeo_id,
-      final_url: videoUrl
-    })
     
     // Pause any hover previews first
     videoRefs.current.forEach((videoEl) => {
@@ -1463,25 +1397,11 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   }
 
   const handleVideoLoad = (videoId: number, event: React.SyntheticEvent<HTMLVideoElement>) => {
-    const video = event.currentTarget
-    addDebugLog("success", `Video ${videoId} loaded`, {
-      readyState: video.readyState,
-      networkState: video.networkState,
-      duration: video.duration,
-      src: video.src.substring(0, 50) + "...",
-    })
+    // Video loaded successfully
   }
 
   const handleVideoError = (videoId: number, event: React.SyntheticEvent<HTMLVideoElement>) => {
-    const video = event.currentTarget
-    addDebugLog("error", `Video ${videoId} error`, {
-      error: video.error,
-      code: video.error?.code,
-      message: video.error?.message,
-      networkState: video.networkState,
-      readyState: video.readyState,
-      src: video.src,
-    })
+    console.error(`Video ${videoId} error:`, event.currentTarget.error)
   }
 
   const formatDate = (dateString: string) => {
@@ -1509,80 +1429,6 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
   // Show video grid directly (skip intro/menu logic)
   return (
     <div className="min-h-screen text-gray-100 relative bg-[#05060A]">
-      {/* Debug Panel Toggle */}
-      <button
-        onClick={() => setShowDebug(!showDebug)}
-        className="fixed bottom-4 right-4 z-50 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-full shadow-lg flex items-center gap-2 text-sm text-white"
-      >
-        <Bug className="w-4 h-4" />
-        Debug
-      </button>
-
-      {/* Debug Panel */}
-      {showDebug && (
-        <div className="fixed bottom-4 right-4 w-96 h-96 bg-black/95 border border-gray-700 rounded-lg shadow-2xl z-50 flex flex-col">
-          <div className="flex items-center justify-between p-3 border-b border-gray-700">
-            <h3 className="font-bold text-sm flex items-center gap-2 text-gray-100">
-              <Bug className="w-4 h-4" />
-              Debug Monitor
-            </h3>
-            <button
-              onClick={() => setShowDebug(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-1 font-mono text-xs">
-            {debugLogs.length === 0 ? (
-              <p className="text-gray-500">No logs yet...</p>
-            ) : (
-              debugLogs.map((log, idx) => (
-                <div
-                  key={idx}
-                  className={`p-2 rounded border-l-2 ${
-                    log.type === "error"
-                      ? "bg-red-900/20 border-red-500 text-red-300"
-                      : log.type === "warning"
-                      ? "bg-yellow-900/20 border-yellow-500 text-yellow-300"
-                      : log.type === "success"
-                      ? "bg-green-900/20 border-green-500 text-green-300"
-                      : "bg-gray-900/20 border-gray-500 text-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-gray-500 text-[10px]">{log.timestamp}</span>
-                    <span className="font-bold uppercase text-[10px]">{log.type}</span>
-                  </div>
-                  <div className="text-xs">{log.message}</div>
-                  {log.data && (
-                    <details className="mt-1">
-                      <summary className="cursor-pointer text-gray-400 text-[10px]">
-                        Details
-                      </summary>
-                      <pre className="mt-1 text-[10px] overflow-x-auto">
-                        {JSON.stringify(log.data, null, 2)}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              ))
-                    )}
-                  </div>
-          <div className="p-2 border-t border-gray-700 flex gap-2">
-            <button
-              onClick={() => setDebugLogs([])}
-              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded"
-            >
-              Clear
-                </button>
-            <div className="flex-1 text-xs text-gray-400 flex items-center justify-end">
-              {debugLogs.length} logs
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-red-900/60 bg-black/80 backdrop-blur-sm px-4 md:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
@@ -1612,7 +1458,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                     : "text-gray-200 hover:bg-white/10"
                 }`}
               >
-                Music
+                MUSIC
               </a>
               <a
                 href="/videos?category=industry-work"
@@ -1622,7 +1468,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                     : "text-gray-200 hover:bg-white/10"
                 }`}
               >
-                Launch Videos
+                LAUNCH VIDEOS
               </a>
               <a
                 href="/videos?category=clothing"
@@ -1632,7 +1478,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                     : "text-gray-200 hover:bg-white/10"
                 }`}
               >
-                Clothing
+                CLOTHING
               </a>
               <a
                 href="/videos?category=live-events"
@@ -1752,9 +1598,9 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm text-gray-100 focus:outline-none focus:border-red-500"
                 >
                   <option value="">None</option>
-                  <option value="music-video">Music</option>
-                  <option value="industry-work">Launch Videos</option>
-                  <option value="clothing">Clothing</option>
+                  <option value="music-video">MUSIC</option>
+                  <option value="industry-work">LAUNCH VIDEOS</option>
+                  <option value="clothing">CLOTHING</option>
                   <option value="live-events">LIVE EVENTS</option>
                   <option value="bts">BTS</option>
                 </select>
