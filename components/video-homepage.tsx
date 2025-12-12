@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { Video } from "@/lib/db"
 import { VideoPlayer } from "@/components/video-player"
-import { Play, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown } from "lucide-react"
+import { Play, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown, X } from "lucide-react"
 import { upload } from '@vercel/blob/client'
 import { useAdmin } from "@/contexts/AdminContext"
 import { useIsMobile } from "@/hooks/use-mobile"
