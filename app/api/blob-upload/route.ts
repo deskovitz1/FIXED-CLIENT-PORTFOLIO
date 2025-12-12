@@ -4,16 +4,18 @@ import {
   type HandleUploadBody,
 } from '@vercel/blob/client';
 
-// Enforce Blob token is set - fail loudly if missing
-const token =
-  process.env.CIRCUS_READ_WRITE_TOKEN ||
-  process.env.BLOB_READ_WRITE_TOKEN;
-
-if (!token) {
-  throw new Error("Missing Blob token");
-}
-
 export async function POST(request: Request) {
+  // Enforce Blob token is set - fail loudly if missing (check at runtime, not build time)
+  const token =
+    process.env.CIRCUS_READ_WRITE_TOKEN ||
+    process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Missing Blob token - please configure BLOB_READ_WRITE_TOKEN environment variable' },
+      { status: 500 }
+    );
+  }
   const body = (await request.json()) as HandleUploadBody;
 
   try {
@@ -43,7 +45,6 @@ export async function POST(request: Request) {
         console.log('✅ Blob upload completed:', {
           url: blob.url,
           pathname: blob.pathname,
-          size: blob.size,
           tokenPayload,
         });
       },
