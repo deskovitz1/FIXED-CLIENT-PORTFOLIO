@@ -3,17 +3,8 @@ import { cookies } from "next/headers";
 import { put } from "@vercel/blob";
 import { updateVideo } from "@/lib/db";
 
-// Enforce Blob token is set - fail loudly if missing
-const token =
-  process.env.CIRCUS_READ_WRITE_TOKEN ||
-  process.env.BLOB_READ_WRITE_TOKEN;
-
-if (!token) {
-  throw new Error("Missing Blob token");
-}
-
-function requireAdmin() {
-  const store = cookies();
+async function requireAdmin() {
+  const store = await cookies();
   const admin = store.get('admin')?.value;
   if (admin !== '1') {
     const err: any = new Error('NOT_ADMIN');
@@ -28,7 +19,19 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    requireAdmin();
+    await requireAdmin();
+    
+    // Enforce Blob token is set - fail loudly if missing (check at runtime, not build time)
+    const token =
+      process.env.CIRCUS_READ_WRITE_TOKEN ||
+      process.env.BLOB_READ_WRITE_TOKEN;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Missing Blob token - please configure BLOB_READ_WRITE_TOKEN environment variable' },
+        { status: 500 }
+      );
+    }
     const id = parseInt(params.id);
 
     if (isNaN(id)) {

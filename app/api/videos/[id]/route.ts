@@ -3,17 +3,8 @@ import { cookies } from "next/headers";
 import { deleteVideo, getVideoById, updateVideo } from "@/lib/db";
 import { del } from "@vercel/blob";
 
-// Enforce Blob token is set - fail loudly if missing
-const token =
-  process.env.CIRCUS_READ_WRITE_TOKEN ||
-  process.env.BLOB_READ_WRITE_TOKEN;
-
-if (!token) {
-  throw new Error("Missing Blob token");
-}
-
-function requireAdmin() {
-  const store = cookies();
+async function requireAdmin() {
+  const store = await cookies();
   const admin = store.get('admin')?.value;
   if (admin !== '1') {
     const err: any = new Error('NOT_ADMIN');
@@ -22,12 +13,25 @@ function requireAdmin() {
   }
 }
 
+function getBlobToken() {
+  const token =
+    process.env.CIRCUS_READ_WRITE_TOKEN ||
+    process.env.BLOB_READ_WRITE_TOKEN;
+  
+  if (!token) {
+    throw new Error('Missing Blob token - please configure BLOB_READ_WRITE_TOKEN environment variable');
+  }
+  
+  return token;
+}
+
 // DELETE a video
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    await requireAdmin();
     const id = parseInt(params.id);
 
     if (isNaN(id)) {
@@ -52,6 +56,7 @@ export async function DELETE(
 
     // Delete from Vercel Blob
     let blobDeleted = false;
+    const token = getBlobToken();
     try {
       if (video.blob_url) {
         // Try multiple approaches to delete the blob
@@ -200,7 +205,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    requireAdmin();
+    await requireAdmin();
     const id = parseInt(params.id);
 
     if (isNaN(id)) {

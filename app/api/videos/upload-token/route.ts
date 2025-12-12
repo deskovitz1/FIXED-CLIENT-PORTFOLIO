@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 
-// Enforce Blob token is set - fail loudly if missing
-const token =
-  process.env.CIRCUS_READ_WRITE_TOKEN ||
-  process.env.BLOB_READ_WRITE_TOKEN;
-
-if (!token) {
-  throw new Error("Missing Blob token");
-}
-
 // POST - Upload file directly to Blob (server-side)
 // This route handles the file upload server-side to avoid client-side limitations
 export async function POST(request: NextRequest) {
+  // Enforce Blob token is set - fail loudly if missing (check at runtime, not build time)
+  const token =
+    process.env.CIRCUS_READ_WRITE_TOKEN ||
+    process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Missing Blob token - please configure BLOB_READ_WRITE_TOKEN environment variable' },
+      { status: 500 }
+    );
+  }
+  
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
