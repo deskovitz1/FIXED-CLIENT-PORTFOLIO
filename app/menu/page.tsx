@@ -967,10 +967,10 @@ export default function MainMenuPage() {
                   }
                 }}
                 style={{
-                  width: isMobile ? "min(85vw, 400px)" : "600px",
-                  height: isMobile ? "min(85vw, 400px)" : "600px",
-                  maxWidth: isMobile ? "min(85vw, 400px)" : "min(75vmin, 600px)",
-                  maxHeight: isMobile ? "min(85vw, 400px)" : "min(75vmin, 600px)",
+                  width: isMobile ? "min(75vw, 350px)" : "520px",
+                  height: isMobile ? "min(75vw, 350px)" : "520px",
+                  maxWidth: isMobile ? "min(75vw, 350px)" : "min(65vmin, 520px)",
+                  maxHeight: isMobile ? "min(75vw, 350px)" : "min(65vmin, 520px)",
                   aspectRatio: "1 / 1",
                   transform: `rotate(${rotation}deg)`,
                   transition: isSpinning
@@ -983,7 +983,7 @@ export default function MainMenuPage() {
                 {slices.map(({ videoIndex, index, clipPath, color }) => {
                   // videoIndex is the index in videos array (same as slice index)
                   // Maps directly to videos[videoIndex]
-                  const video = videos[videoIndex];
+                  const video = videoIndex !== null ? videos[videoIndex] : null;
                   
                   // Safety check: if video doesn't exist, show placeholder
                   if (!video) {

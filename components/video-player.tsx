@@ -77,7 +77,7 @@ export function VideoPlayer({
           </button>
         )}
 
-        <div className={`relative ${isMobile ? 'w-full h-full' : 'w-[95vw] h-[95vh] max-w-none'} bg-black flex flex-col`}>
+        <div className={`relative ${isMobile ? 'w-full h-full' : 'w-[90vw] max-w-[1400px] h-[85vh] max-h-[800px]'} bg-black flex flex-col rounded-lg overflow-hidden`}>
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -87,16 +87,18 @@ export function VideoPlayer({
           </button>
           
           {/* Vimeo Player */}
-          <div className="relative flex-1 w-full">
-            <VimeoPlayer
-              videoId={vimeoId}
-              hash={video?.vimeo_hash || null}
-              autoplay
-              muted={false}
-              loop={false}
-              className="w-full h-full"
-              aspectRatio="16/9"
-            />
+          <div className="relative flex-1 w-full flex items-center justify-center">
+            <div className="w-full h-full max-w-full max-h-full">
+              <VimeoPlayer
+                videoId={vimeoId}
+                hash={video?.vimeo_hash || null}
+                autoplay
+                muted={false}
+                loop={false}
+                className="w-full h-full"
+                aspectRatio="16/9"
+              />
+            </div>
             
             {/* Title Overlay */}
             {(title || video?.title) && (
