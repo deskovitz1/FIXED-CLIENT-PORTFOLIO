@@ -28,11 +28,12 @@ function getBlobToken() {
 // DELETE a video
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
     if (isNaN(id)) {
       return NextResponse.json(
@@ -168,10 +169,11 @@ export async function DELETE(
 // GET a single video
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
     if (isNaN(id)) {
       return NextResponse.json(
@@ -202,11 +204,12 @@ export async function GET(
 // PATCH update a video
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
     if (isNaN(id)) {
       return NextResponse.json(

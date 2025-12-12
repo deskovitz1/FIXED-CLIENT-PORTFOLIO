@@ -16,7 +16,7 @@ async function requireAdmin() {
 // POST - Upload thumbnail for a video
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
@@ -32,7 +32,8 @@ export async function POST(
         { status: 500 }
       );
     }
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
     if (isNaN(id)) {
       return NextResponse.json(
