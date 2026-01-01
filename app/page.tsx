@@ -16,6 +16,13 @@ export default function IntroLanding() {
   const preloadVideoRef = useRef<HTMLVideoElement | null>(null)
   const router = useRouter()
 
+  // Mobile: Skip all intro videos and go directly to videos page
+  useEffect(() => {
+    if (isMobile) {
+      router.replace("/videos")
+    }
+  }, [isMobile, router])
+
   // BANDWIDTH-SAFE: Preload door video metadata only (not full video)
   // Changed from aggressive preload="auto" + load() to metadata-only to prevent bandwidth spikes
   useEffect(() => {
@@ -85,15 +92,28 @@ export default function IntroLanding() {
     }
 
     // Cut 2.5 seconds off the end - transition when 2.5 seconds before end
+    // On mobile, skip door stage and go directly to videos
     const handleTimeUpdate = () => {
       if (video.duration && video.currentTime >= video.duration - 2.5) {
-        setStage("door")
+        if (isMobile) {
+          // Mobile: skip door video, go directly to videos page
+          router.push("/videos")
+        } else {
+          // Desktop: continue to door stage
+          setStage("door")
+        }
       }
     }
 
     // Fallback: also handle ended event in case timeupdate doesn't fire
     const handleEnded = () => {
-      setStage("door")
+      if (isMobile) {
+        // Mobile: skip door video, go directly to videos page
+        router.push("/videos")
+      } else {
+        // Desktop: continue to door stage
+        setStage("door")
+      }
     }
 
     video.addEventListener("canplay", handleCanPlay)
@@ -113,7 +133,7 @@ export default function IntroLanding() {
         // Ignore pause errors during cleanup
       }
     }
-  }, [stage])
+  }, [stage, isMobile, router])
 
   // Stage 2: Door video (full-screen, click to enter)
   const handleEnter = () => {
@@ -167,15 +187,36 @@ export default function IntroLanding() {
   }
 
   const handleDoorVideoEnded = () => {
-    console.log("Door video fully completed, navigating to menu")
-    router.push("/menu")
+    console.log("Door video fully completed, navigating to", isMobile ? "videos (mobile)" : "menu (desktop)")
+    // Mobile: skip directly to videos page
+    // Desktop: go to menu page (original flow)
+    if (isMobile) {
+      router.push("/videos")
+    } else {
+      router.push("/menu")
+    }
   }
 
   const handleSkip = () => {
-    router.push("/menu")
+    // Mobile: skip directly to videos page
+    // Desktop: go to menu page (original flow)
+    if (isMobile) {
+      router.push("/videos")
+    } else {
+      router.push("/menu")
+    }
   }
 
-  // Stage 1: Splash screen (small video)
+  // Mobile: Don't render anything, redirect happens in useEffect above
+  if (isMobile) {
+    return (
+      <div className="relative w-screen h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    )
+  }
+
+  // Stage 1: Splash screen (small video) - Desktop only
   if (stage === "splash") {
     return (
       <div className="relative w-screen h-screen bg-black flex items-center justify-center">
@@ -222,7 +263,7 @@ export default function IntroLanding() {
         <button
           type="button"
           onClick={handleSkip}
-          className={`absolute ${isMobile ? 'bottom-4 right-4' : 'bottom-6 right-6'} px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition z-20 min-h-[44px] min-w-[44px] flex items-center justify-center`}
+          className={`absolute ${isMobile ? 'bottom-4 right-4' : 'bottom-6 right-6'} px-4 py-2.5 text-sm sm:text-base border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black active:scale-95 transition-all z-20 min-h-[44px] min-w-[80px] flex items-center justify-center touch-manipulation`}
         >
           Skip intro
         </button>
@@ -276,9 +317,6 @@ export default function IntroLanding() {
         onWaiting={() => {
           console.log("Enter video waiting for data")
         }}
-        onCanPlayThrough={() => {
-          console.log("Enter video fully buffered")
-        }}
         onLoadedMetadata={(e) => {
           // Play at normal speed (1.0x) - no speed increase
           e.currentTarget.playbackRate = 1.0
@@ -315,10 +353,10 @@ export default function IntroLanding() {
         <button
           type="button"
           onClick={handleEnter}
-          className="absolute inset-0 flex items-center justify-center text-center text-white bg-black/40 z-10 min-h-[44px] min-w-[44px] cursor-pointer"
+          className="absolute inset-0 flex items-center justify-center text-center text-white bg-black/40 z-10 min-h-[44px] min-w-[44px] cursor-pointer touch-manipulation active:bg-black/50"
           aria-label="Click to enter"
         >
-          <span className={`${isMobile ? 'text-xs' : 'text-sm md:text-base'} tracking-[0.15em] sm:tracking-[0.2em] font-light opacity-90 hover:opacity-100 transition-opacity pointer-events-none`}>
+          <span className={`${isMobile ? 'text-base sm:text-lg' : 'text-lg md:text-xl'} tracking-[0.15em] sm:tracking-[0.2em] font-light opacity-90 hover:opacity-100 active:opacity-100 transition-opacity pointer-events-none`}>
             {isMobile ? 'TAP TO ENTER' : 'CLICK TO ENTER'}
           </span>
         </button>
@@ -328,7 +366,7 @@ export default function IntroLanding() {
       <button
         type="button"
         onClick={handleSkip}
-        className={`absolute ${isMobile ? 'bottom-4 right-4' : 'bottom-6 right-6'} px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition z-20 min-h-[44px] min-w-[44px] flex items-center justify-center`}
+        className={`absolute ${isMobile ? 'bottom-4 right-4' : 'bottom-6 right-6'} px-4 py-2.5 text-sm sm:text-base border border-white/60 rounded-full bg-black/50 text-white hover:bg-white hover:text-black active:scale-95 transition-all z-20 min-h-[44px] min-w-[80px] flex items-center justify-center touch-manipulation`}
       >
         Skip intro
       </button>

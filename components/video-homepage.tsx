@@ -3,12 +3,13 @@
 import { useEffect, useState, useRef } from "react"
 import { Video } from "@/lib/db"
 import { VideoPlayer } from "@/components/video-player"
-import { Play, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown, X } from "lucide-react"
+import { Play, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown, X, Menu } from "lucide-react"
 import { upload } from '@vercel/blob/client'
 import { useAdmin } from "@/contexts/AdminContext"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { parseVimeoUrl } from "@/lib/vimeo-url-parser"
 import { getVideoThumbnail } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 interface VideoHomepageProps {
   initialCategory?: string
@@ -42,6 +43,105 @@ const CATEGORIES = [
   { value: 'live-events', label: 'LIVE EVENTS' },
   { value: 'bts', label: 'BTS' },
 ]
+
+// Mobile Navigation Menu Component
+function MobileNavMenu({ selectedCategory }: { selectedCategory: string | null }) {
+  const isMobile = useIsMobile()
+  
+  if (!isMobile) return null
+  
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <button
+          className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[280px] bg-black border-gray-800">
+        <div className="flex flex-col gap-4 mt-8">
+          <h2 className="text-xl font-bold text-white mb-4">Navigation</h2>
+          <a
+            href="/videos"
+            className={`px-4 py-3 rounded-lg text-base transition-colors touch-manipulation ${
+              selectedCategory === null
+                ? "bg-red-600 text-white"
+                : "text-gray-200 hover:bg-white/10"
+            }`}
+          >
+            All Videos
+          </a>
+          <a
+            href="/videos?category=music-video"
+            className={`px-4 py-3 rounded-lg text-base transition-colors touch-manipulation ${
+              selectedCategory === "music-video"
+                ? "bg-red-500 text-white"
+                : "text-gray-200 hover:bg-white/10"
+            }`}
+          >
+            MUSIC
+          </a>
+          <a
+            href="/videos?category=industry-work"
+            className={`px-4 py-3 rounded-lg text-base transition-colors touch-manipulation ${
+              selectedCategory === "industry-work"
+                ? "bg-red-500 text-white"
+                : "text-gray-200 hover:bg-white/10"
+            }`}
+          >
+            LAUNCH VIDEOS
+          </a>
+          <a
+            href="/videos?category=clothing"
+            className={`px-4 py-3 rounded-lg text-base transition-colors touch-manipulation ${
+              selectedCategory === "clothing"
+                ? "bg-red-500 text-white"
+                : "text-gray-200 hover:bg-white/10"
+            }`}
+          >
+            CLOTHING
+          </a>
+          <a
+            href="/videos?category=live-events"
+            className={`px-4 py-3 rounded-lg text-base transition-colors touch-manipulation ${
+              selectedCategory === "live-events"
+                ? "bg-red-500 text-white"
+                : "text-gray-200 hover:bg-white/10"
+            }`}
+          >
+            LIVE EVENTS
+          </a>
+          <a
+            href="/videos?category=bts"
+            className={`px-4 py-3 rounded-lg text-base transition-colors touch-manipulation ${
+              selectedCategory === "bts"
+                ? "bg-red-500 text-white"
+                : "text-gray-200 hover:bg-white/10"
+            }`}
+          >
+            BTS
+          </a>
+          <div className="border-t border-gray-800 mt-4 pt-4">
+            <a
+              href="/menu"
+              className="px-4 py-3 rounded-lg text-base text-gray-200 hover:bg-white/10 transition-colors touch-manipulation block"
+            >
+              Menu
+            </a>
+            <a
+              href="/contact"
+              className="px-4 py-3 rounded-lg text-base text-gray-200 hover:bg-white/10 transition-colors touch-manipulation block"
+            >
+              Contact
+            </a>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
 
 // Helper function to format category for display
 function formatCategory(category: string | null): string {
@@ -223,8 +323,8 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
 
   if (editing) {
     return (
-      <div className="flex-1 lg:max-w-[70%]">
-        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-3">
+      <div className="flex-1 lg:max-w-[70%] w-full">
+        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -392,7 +492,7 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
         onDragEnd={onDragEnd}
       >
         {/* Featured Video Thumbnail */}
-        <div className="relative aspect-video rounded-lg overflow-hidden mb-4 bg-black">
+        <div className="relative aspect-video rounded-lg overflow-hidden mb-3 sm:mb-4 bg-black">
           {/* Show thumbnail image - video plays in modal via VimeoPlayer */}
           {getVideoThumbnail(video) ? (
             <img
@@ -433,11 +533,11 @@ function FeaturedVideoItem({ video, onChanged, onVideoClick, videoRefs, onVideoL
 
         {/* Featured Video Info */}
         <div>
-          <h2 className="font-semibold text-lg mb-2 text-gray-100 transition-colors group-hover:text-red-300">
+          <h2 className={`font-semibold ${isMobile ? 'text-base sm:text-lg' : 'text-lg'} mb-2 text-gray-100 transition-colors group-hover:text-red-300`}>
             {video.title}
           </h2>
           {video.description && (
-            <p className="text-sm text-gray-300 line-clamp-3">
+            <p className={`${isMobile ? 'text-xs sm:text-sm' : 'text-sm'} text-gray-300 line-clamp-3`}>
               {video.description}
             </p>
           )}
@@ -693,7 +793,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
 
   if (editing) {
     return (
-      <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2">
+      <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-2 sm:p-3 space-y-2">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -828,7 +928,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
 
   return (
     <div
-      className={`group cursor-pointer flex gap-3 relative transition-all ${
+      className={`group cursor-pointer flex gap-2 sm:gap-3 relative transition-all touch-manipulation ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isDragOver ? 'ring-2 ring-red-500 ring-offset-2 scale-105 bg-red-900/20' : ''}`}
       onClick={onSelect}
@@ -855,7 +955,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
       onMouseLeave={() => setShowActions(false)}
     >
       {/* Sidebar Video Thumbnail */}
-      <div className="relative w-40 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-black">
+      <div className={`relative ${isMobile ? 'w-32 sm:w-40' : 'w-40'} h-20 sm:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-black`}>
         {/* Show thumbnail image - video plays in modal via VimeoPlayer */}
         {getVideoThumbnail(video) ? (
           <img
@@ -887,11 +987,11 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
 
       {/* Sidebar Video Info */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-sm line-clamp-2 mb-1 text-gray-100 group-hover:text-red-300 transition-colors">
+        <h3 className={`font-medium ${isMobile ? 'text-xs sm:text-sm' : 'text-sm'} line-clamp-2 mb-1 text-gray-100 group-hover:text-red-300 transition-colors`}>
           {video.title}
         </h3>
         {video.description && (
-          <p className="text-xs text-gray-400 line-clamp-2 mb-1.5">
+          <p className={`${isMobile ? 'text-[10px] sm:text-xs' : 'text-xs'} text-gray-400 line-clamp-2 mb-1.5`}>
             {video.description}
           </p>
         )}
@@ -1431,11 +1531,11 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
     <div className="min-h-screen text-gray-100 relative bg-[#05060A]">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-red-900/60 bg-black/80 backdrop-blur-sm px-4 md:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
-          <div className="flex items-center gap-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center gap-3 sm:gap-6">
             <a
               href="/"
-              className="text-xl font-bold text-gray-100 hover:opacity-70 transition-opacity"
+              className="text-lg sm:text-xl font-bold text-gray-100 hover:opacity-70 transition-opacity touch-manipulation"
             >
               CIRCUS17
             </a>
@@ -1502,21 +1602,25 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
               </a>
             </nav>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile menu button */}
+            <MobileNavMenu selectedCategory={selectedCategory} />
+            
             {/* Contact button */}
             <a
               href="mailto:info@circusseventeen.com"
-              className="px-4 py-2 text-sm bg-transparent border border-white/30 hover:bg-red-500/90 hover:border-red-500/90 text-white rounded-full transition-colors"
+              className="hidden sm:inline-flex px-3 sm:px-4 py-2 text-xs sm:text-sm bg-transparent border border-white/30 hover:bg-red-500/90 hover:border-red-500/90 text-white rounded-full transition-colors touch-manipulation min-h-[44px] items-center justify-center"
             >
-              Contact Us
+              Contact
             </a>
             {isAdmin && (
               <button
                 onClick={() => setShowAddVideo(true)}
-                className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-full transition-all flex items-center gap-1.5 sm:gap-2 touch-manipulation min-h-[44px]"
               >
-                <Plus className="w-4 h-4" />
-                Add Video
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Add Video</span>
+                <span className="sm:hidden">Add</span>
               </button>
             )}
           </div>
@@ -1525,8 +1629,8 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
 
       {/* Add Video Dialog */}
       {showAddVideo && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-100 flex items-center gap-2">
                 <Upload className="w-5 h-5" />
@@ -1701,7 +1805,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-4 sm:py-6">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -1721,9 +1825,9 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Main Video Area (YouTube-style - Larger) */}
-            <div className="flex-1 lg:max-w-[65%]">
+            <div className="flex-1 lg:max-w-[65%] w-full">
               {featuredVideo && (
                 <FeaturedVideoItem
                   video={featuredVideo}
@@ -1748,8 +1852,8 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
             </div>
 
             {/* Sidebar Videos (Right Side - YouTube-style sidebar) */}
-            <div className="lg:w-[35%] lg:max-w-[450px] space-y-3">
-              <h3 className="text-sm font-semibold text-gray-300 mb-3 hidden lg:block">Up Next</h3>
+            <div className="lg:w-[35%] lg:max-w-[450px] w-full space-y-2 sm:space-y-3">
+              <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3 hidden lg:block">Up Next</h3>
               {videos
                 .filter((video) => video.id !== featuredVideo?.id)
                 .map((video, index) => {

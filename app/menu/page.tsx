@@ -810,53 +810,55 @@ export default function MainMenuPage() {
       </div>
 
       {/* Top navigation - centered */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-center mb-4 sm:mb-6 md:mb-8 pt-2 sm:pt-3 md:pt-4">
-        <nav className="flex items-center gap-2 sm:gap-3 md:gap-5 lg:gap-8 text-[10px] sm:text-xs md:text-sm tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.25em] uppercase flex-wrap justify-center">
+      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-center mb-3 sm:mb-4 md:mb-6 lg:mb-8 pt-2 sm:pt-3 md:pt-4">
+        <nav className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 xl:gap-8 text-[9px] sm:text-[10px] md:text-xs lg:text-sm tracking-[0.1em] sm:tracking-[0.15em] md:tracking-[0.2em] lg:tracking-[0.25em] uppercase flex-wrap justify-center px-2">
           <a
             href="/videos"
-            className="group relative inline-flex items-center"
+            className="group relative inline-flex items-center touch-manipulation min-h-[32px] sm:min-h-[36px]"
           >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
+            <span className="px-1.5 sm:px-2 py-1 sm:py-0.5 rounded-[3px] group-hover:bg-red-500/90 active:bg-red-500 transition-colors">
               <span className="relative z-10 text-white group-hover:text-white">All</span>
             </span>
           </a>
           <a
             href="/videos?category=music-video"
-            className="group relative inline-flex items-center"
+            className="group relative inline-flex items-center touch-manipulation min-h-[32px] sm:min-h-[36px]"
           >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
+            <span className="px-1.5 sm:px-2 py-1 sm:py-0.5 rounded-[3px] group-hover:bg-red-500/90 active:bg-red-500 transition-colors">
               <span className="relative z-10 text-white group-hover:text-white">Music</span>
             </span>
           </a>
           <a
             href="/videos?category=industry-work"
-            className="group relative inline-flex items-center"
+            className="group relative inline-flex items-center touch-manipulation min-h-[32px] sm:min-h-[36px]"
           >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-white group-hover:text-white">Launch Videos</span>
+            <span className="px-1.5 sm:px-2 py-1 sm:py-0.5 rounded-[3px] group-hover:bg-red-500/90 active:bg-red-500 transition-colors">
+              <span className="relative z-10 text-white group-hover:text-white hidden sm:inline">Launch Videos</span>
+              <span className="relative z-10 text-white group-hover:text-white sm:hidden">Launch</span>
             </span>
           </a>
           <a
             href="/videos?category=clothing"
-            className="group relative inline-flex items-center"
+            className="group relative inline-flex items-center touch-manipulation min-h-[32px] sm:min-h-[36px]"
           >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
+            <span className="px-1.5 sm:px-2 py-1 sm:py-0.5 rounded-[3px] group-hover:bg-red-500/90 active:bg-red-500 transition-colors">
               <span className="relative z-10 text-white group-hover:text-white">Clothing</span>
             </span>
           </a>
           <a
             href="/videos?category=live-events"
-            className="group relative inline-flex items-center"
+            className="group relative inline-flex items-center touch-manipulation min-h-[32px] sm:min-h-[36px]"
           >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
-              <span className="relative z-10 text-white group-hover:text-white">LIVE EVENTS</span>
+            <span className="px-1.5 sm:px-2 py-1 sm:py-0.5 rounded-[3px] group-hover:bg-red-500/90 active:bg-red-500 transition-colors">
+              <span className="relative z-10 text-white group-hover:text-white hidden sm:inline">LIVE EVENTS</span>
+              <span className="relative z-10 text-white group-hover:text-white sm:hidden">Events</span>
             </span>
           </a>
           <a
             href="/videos?category=bts"
-            className="group relative inline-flex items-center"
+            className="group relative inline-flex items-center touch-manipulation min-h-[32px] sm:min-h-[36px]"
           >
-            <span className="px-1 py-0.5 rounded-[3px] group-hover:bg-red-500/90 transition-colors">
+            <span className="px-1.5 sm:px-2 py-1 sm:py-0.5 rounded-[3px] group-hover:bg-red-500/90 active:bg-red-500 transition-colors">
               <span className="relative z-10 text-white group-hover:text-white">BTS</span>
             </span>
           </a>
@@ -880,14 +882,14 @@ export default function MainMenuPage() {
           </div>
         </div>
       ) : (
-        <div className="relative z-10 sc-page w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-24 xl:gap-32 flex-1 py-4 sm:py-6 md:py-8 lg:py-12">
+        <div className="relative z-10 sc-page w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-12 xl:gap-24 flex-1 py-3 sm:py-4 md:py-6 lg:py-8 px-2 sm:px-4">
           {/* Left side: lever + wheel in a row */}
-          <div className="sc-left flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12 flex-shrink-0">
+          <div className="sc-left flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-10 flex-shrink-0">
             {/* Lever with spin indication */}
             <div className="flex flex-col items-center gap-2">
               {/* Minimal lever on the left */}
               <div
-                className={`lever-mount relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[140px] md:h-[140px] flex items-center justify-start cursor-pointer min-h-[44px] min-w-[44px] ${
+                className={`lever-mount relative w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[120px] md:h-[120px] lg:w-[140px] lg:h-[140px] flex items-center justify-start cursor-pointer min-h-[44px] min-w-[44px] touch-manipulation ${
                   isSpinning ? "lever-mount--disabled opacity-50 cursor-not-allowed" : ""
                 }`}
                 onMouseDown={handleLeverPullStart}
@@ -922,8 +924,8 @@ export default function MainMenuPage() {
               </div>
               {/* Spin indication label */}
               <div className="text-center">
-                <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-medium">
-                  Pull to Spin
+                <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-400 uppercase tracking-wider font-medium">
+                  {isMobile ? 'Tap to Spin' : 'Pull to Spin'}
                 </div>
               </div>
             </div>
@@ -967,10 +969,10 @@ export default function MainMenuPage() {
                   }
                 }}
                 style={{
-                  width: isMobile ? "min(75vw, 350px)" : "520px",
-                  height: isMobile ? "min(75vw, 350px)" : "520px",
-                  maxWidth: isMobile ? "min(75vw, 350px)" : "min(65vmin, 520px)",
-                  maxHeight: isMobile ? "min(75vw, 350px)" : "min(65vmin, 520px)",
+                  width: isMobile ? "min(70vw, 320px)" : "520px",
+                  height: isMobile ? "min(70vw, 320px)" : "520px",
+                  maxWidth: isMobile ? "min(70vw, 320px)" : "min(65vmin, 520px)",
+                  maxHeight: isMobile ? "min(70vw, 320px)" : "min(65vmin, 520px)",
                   aspectRatio: "1 / 1",
                   transform: `rotate(${rotation}deg)`,
                   transition: isSpinning
@@ -1105,12 +1107,12 @@ export default function MainMenuPage() {
               
               {/* Selected video title display below wheel */}
               {selectedVideoIndex != null && videos[selectedVideoIndex] && !isSpinning && (
-                <div className="mt-4 text-center max-w-md">
-                  <h3 className="text-lg font-semibold text-white mb-1">
+                <div className="mt-3 sm:mt-4 text-center max-w-md px-2">
+                  <h3 className={`${isMobile ? 'text-sm sm:text-base' : 'text-lg'} font-semibold text-white mb-1`}>
                     {videos[selectedVideoIndex].title}
                   </h3>
                   {videos[selectedVideoIndex].description && (
-                    <p className="text-sm text-gray-300 line-clamp-2">
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-300 line-clamp-2`}>
                       {videos[selectedVideoIndex].description}
                     </p>
                   )}
@@ -1121,7 +1123,7 @@ export default function MainMenuPage() {
 
           {/* Right column: CRT TV that plays the selected video */}
           <div className="sc-right flex items-center justify-center flex-shrink-0 w-full lg:w-auto">
-            <div className="crt-shell flex flex-col items-center gap-3 sm:gap-4 w-full max-w-[90vw] sm:max-w-none">
+            <div className="crt-shell flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-[90vw] sm:max-w-[85vw] md:max-w-none">
               {/* CRT TV Frame - Enhanced */}
               <div className="crt-frame relative rounded-[28px] sm:rounded-[32px] md:rounded-[36px] bg-[linear-gradient(135deg,#555_0%,#222_50%,#111_100%)] p-4 sm:p-5 md:p-6 lg:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)] w-full border-2 border-gray-800/50">
                 {/* Brand Logo Area */}
@@ -1132,7 +1134,7 @@ export default function MainMenuPage() {
                 </div>
                 
                 {/* Screen Bezel */}
-                <div className={`crt-screen relative ${isMobile ? 'w-full' : 'w-[320px] md:w-[420px] lg:w-[500px]'} aspect-[4/3] bg-black rounded-[12px] sm:rounded-[14px] md:rounded-[16px] overflow-hidden border-[6px] sm:border-[8px] border-[#1a1a1a] shadow-[inset_0_0_50px_rgba(0,0,0,0.95),0_0_20px_rgba(0,0,0,0.8)] flex-shrink-0 mx-auto mt-4`} style={{
+                <div className={`crt-screen relative ${isMobile ? 'w-full max-w-[85vw]' : 'w-[320px] md:w-[420px] lg:w-[500px]'} aspect-[4/3] bg-black rounded-[10px] sm:rounded-[12px] md:rounded-[14px] lg:rounded-[16px] overflow-hidden border-[4px] sm:border-[6px] md:border-[8px] border-[#1a1a1a] shadow-[inset_0_0_50px_rgba(0,0,0,0.95),0_0_20px_rgba(0,0,0,0.8)] flex-shrink-0 mx-auto mt-2 sm:mt-3 md:mt-4`} style={{
                   boxShadow: 'inset 0 0 50px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.5)'
                 }}>
                   {/* Screen Glass Reflection Effect */}
@@ -1176,11 +1178,11 @@ export default function MainMenuPage() {
                           {selectedVideoIndex != null && !isSpinning && (
                             <button
                               onClick={handleCrtPlay}
-                              className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors group"
+                              className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 hover:bg-black/30 active:bg-black/40 transition-colors group touch-manipulation min-h-[44px] min-w-[44px]"
                               aria-label="Play video"
                             >
-                              <div className="w-16 h-16 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                              <div className={`${isMobile ? 'w-14 h-14' : 'w-16 h-16'} bg-white/90 hover:bg-white active:bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-105 transition-transform`}>
+                                <svg className={`${isMobile ? 'w-7 h-7' : 'w-8 h-8'} text-black ml-1`} fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M8 5v14l11-7z" />
                                 </svg>
                               </div>
@@ -1223,7 +1225,7 @@ export default function MainMenuPage() {
                 </div>
               </div>
               {/* CRT controls - Clean Navigation Buttons */}
-              <div className="crt-controls flex items-center justify-center gap-4 sm:gap-5 w-full mt-2 px-2">
+              <div className="crt-controls flex items-center justify-center gap-3 sm:gap-4 md:gap-5 w-full mt-2 px-2">
                 {/* Left Arrow Button */}
                 {activeVideo && selectedVideoIndex != null && !isSpinning ? (
                   <button
@@ -1235,15 +1237,15 @@ export default function MainMenuPage() {
                       }
                     }}
                     disabled={selectedVideoIndex === 0}
-                    className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center touch-manipulation min-h-[44px] min-w-[44px]"
                     title="Previous video"
                   >
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 opacity-50" />
+                  <div className={`${isMobile ? 'w-10 h-10' : 'w-10 h-10 sm:w-12 sm:h-12'} rounded-full bg-gray-900 border border-gray-700 opacity-50`} />
                 )}
                 
                 {/* Right Arrow Button */}
@@ -1257,15 +1259,15 @@ export default function MainMenuPage() {
                       }
                     }}
                     disabled={selectedVideoIndex === videos.length - 1}
-                    className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-600 hover:border-gray-500 transition-all duration-200 active:scale-95 flex items-center justify-center touch-manipulation min-h-[44px] min-w-[44px]"
                     title="Next video"
                   >
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 opacity-50" />
+                  <div className={`${isMobile ? 'w-10 h-10' : 'w-10 h-10 sm:w-12 sm:h-12'} rounded-full bg-gray-900 border border-gray-700 opacity-50`} />
                 )}
               </div>
               

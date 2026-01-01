@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "CIRCUS17",
   description: "Cinematic storytelling and production",
   generator: "v0.app",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 }
 
 export default function RootLayout({

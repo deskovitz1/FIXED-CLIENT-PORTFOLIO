@@ -54,19 +54,19 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <header className="w-full border-b border-white/10 py-6 px-4 sm:px-6 md:px-8">
+      <header className="w-full border-b border-white/10 py-4 sm:py-6 px-4 sm:px-6 md:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-xl md:text-2xl font-light tracking-tight hover:opacity-70 transition-opacity">
+          <Link href="/" className="text-lg sm:text-xl md:text-2xl font-light tracking-tight hover:opacity-70 transition-opacity touch-manipulation">
             CIRCUS17
           </Link>
-          <nav className="flex items-center gap-4 sm:gap-6">
-            <Link href="/videos" className="text-sm text-gray-300 hover:text-white transition-colors">
+          <nav className="flex items-center gap-3 sm:gap-4 md:gap-6">
+            <Link href="/videos" className="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors touch-manipulation min-h-[44px] flex items-center">
               Videos
             </Link>
-            <Link href="/menu" className="text-sm text-gray-300 hover:text-white transition-colors">
+            <Link href="/menu" className="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors touch-manipulation min-h-[44px] flex items-center">
               Menu
             </Link>
-            <Link href="/contact" className="text-sm text-red-500 font-medium">
+            <Link href="/contact" className="text-xs sm:text-sm text-red-500 font-medium touch-manipulation min-h-[44px] flex items-center">
               Contact
             </Link>
           </nav>
@@ -74,12 +74,12 @@ export default function ContactPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 md:px-8">
+      <main className="flex-1 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 md:px-8">
         <div className="w-full max-w-2xl">
-          <div className="text-center mb-8">
-            <Mail className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl md:text-4xl font-light mb-2">Get in Touch</h1>
-            <p className="text-gray-400">
+          <div className="text-center mb-6 sm:mb-8">
+            <Mail className="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-3 sm:mb-4" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light mb-2">Get in Touch</h1>
+            <p className="text-sm sm:text-base text-gray-400 px-4">
               Send us a message and we'll get back to you as soon as possible.
             </p>
           </div>
@@ -107,7 +107,7 @@ export default function ContactPage() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                  className="w-full px-4 py-3 text-base bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors touch-manipulation"
                   placeholder="Your name"
                 />
               </div>
@@ -123,7 +123,7 @@ export default function ContactPage() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                  className="w-full px-4 py-3 text-base bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors touch-manipulation"
                   placeholder="your.email@example.com"
                 />
               </div>
@@ -138,7 +138,7 @@ export default function ContactPage() {
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                  className="w-full px-4 py-3 text-base bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors touch-manipulation"
                   placeholder="What's this about?"
                 />
               </div>
@@ -154,7 +154,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   required
                   rows={6}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none"
+                  className="w-full px-4 py-3 text-base bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none touch-manipulation"
                   placeholder="Tell us about your project or inquiry..."
                 />
               </div>
@@ -162,7 +162,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 touch-manipulation min-h-[44px]"
               >
                 {isSubmitting ? (
                   <>
