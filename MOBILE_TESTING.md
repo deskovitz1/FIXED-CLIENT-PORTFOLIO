@@ -38,7 +38,7 @@ Look for IPv4 Address (usually starts with 192.168.x.x or 10.x.x.x)
 
 1. Make sure your mobile device is on the **same Wi-Fi network** as your computer
 2. Open a browser on your mobile device
-3. Navigate to: `http://YOUR_IP_ADDRESS:3000`
+3. Navigate to: `http://d:3000`
    - Example: `http://192.168.1.100:3000`
 
 ### Troubleshooting

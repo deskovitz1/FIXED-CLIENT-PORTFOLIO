@@ -1,7 +1,6 @@
 "use client"
 
 import { VideoHomepage } from "@/components/video-homepage"
-import { VideoPagePassword } from "@/components/VideoPagePassword"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 
@@ -38,9 +37,7 @@ function VideosPageContent() {
   const category = searchParams?.get('category') || undefined
 
   return (
-    <VideoPagePassword>
-      <VideoHomepage initialCategory={category} />
-    </VideoPagePassword>
+    <VideoHomepage initialCategory={category} />
   )
 }
 
