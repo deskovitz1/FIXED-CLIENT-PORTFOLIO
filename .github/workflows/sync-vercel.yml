@@ -1,43 +1,32 @@
-name: Sync to Vercel
+name: Verify production build
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
+# Vercel's Git integration owns deployment and production environment secrets.
+# This workflow independently checks compilation without deploying a second copy.
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    env:
+      # Required when Prisma is imported at build time; no pages query this DB
+      # during prerendering. Production uses Vercel's real DATABASE_URL.
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
     steps:
       - uses: actions/checkout@v4
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-      
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
       - name: Build
         run: pnpm build
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-
-
-
