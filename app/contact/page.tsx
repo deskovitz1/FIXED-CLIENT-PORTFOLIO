@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { SiteNavigation } from "@/components/site-navigation"
 import { Mail, Send } from "lucide-react"
 
 export default function ContactPage() {
-  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -52,26 +50,8 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header */}
-      <header className="w-full border-b border-white/10 py-4 sm:py-6 px-4 sm:px-6 md:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-lg sm:text-xl md:text-2xl font-light tracking-tight hover:opacity-70 transition-opacity touch-manipulation">
-            CIRCUS17
-          </Link>
-          <nav className="flex items-center gap-3 sm:gap-4 md:gap-6">
-            <Link href="/videos" className="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors touch-manipulation min-h-[44px] flex items-center">
-              Videos
-            </Link>
-            <Link href="/menu" className="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors touch-manipulation min-h-[44px] flex items-center">
-              Menu
-            </Link>
-            <Link href="/contact" className="text-xs sm:text-sm text-red-500 font-medium touch-manipulation min-h-[44px] flex items-center">
-              Contact
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="studio-contact min-h-screen flex flex-col">
+      <SiteNavigation />
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 md:px-8">

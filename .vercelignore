@@ -1,0 +1,7 @@
+# Export originals are retained in GitHub; the site serves their MP4 copies.
+public/projects/**/*.MOV
+public/projects/**/*.mov
+public/projects/**/*.HEIC
+public/projects/**/*.heic
+public/videos/director-reel.mp4
+**/.DS_Store

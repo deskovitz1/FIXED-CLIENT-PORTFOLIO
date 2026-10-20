@@ -1,0 +1,56 @@
+/* Shared identity. Object-specific materials live in menu/carnival.css. */
+.studio-navigation { position:relative; z-index:40; width:100%; background:#fff; color:#171713; padding:24px clamp(18px,4vw,64px) 0; }
+.studio-navigation-top { display:flex; align-items:center; justify-content:space-between; gap:24px; padding-bottom:24px; }
+.studio-wordmark { font-family:Impact,'Arial Narrow',sans-serif; font-weight:900; font-size:clamp(36px,5vw,70px); line-height:.85; letter-spacing:-.055em; }
+.studio-wordmark span { display:inline-block; color:#df3926; margin-left:.025em; text-shadow:1px 1px 0 #153c8a; }
+.studio-main-links { display:flex; align-items:center; gap:clamp(16px,3vw,42px); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.studio-main-links a,.studio-categories a { text-decoration:none; position:relative; min-height:44px; display:inline-flex; align-items:center; }
+.studio-main-links a:after,.studio-categories a:after { content:''; height:2px; position:absolute; bottom:6px; left:0; right:0; background:#e03926; transform:scaleX(0); transform-origin:left; transition:transform .2s; }
+.studio-main-links a:hover:after,.studio-categories a:hover:after,.studio-navigation a[aria-current=page]:after { transform:scaleX(1); }
+.studio-categories { display:flex; flex-wrap:wrap; column-gap:clamp(16px,3vw,42px); border-top:1px solid #d7d7d3; padding:8px 0; font:10px monospace; text-transform:uppercase; letter-spacing:.06em; }
+.studio-navigation :focus-visible,.film-catalog :focus-visible { outline:2px solid #194fad; outline-offset:5px; }
+.studio-portfolio { background:#fff; color:#191916; min-height:100vh; }
+.studio-content { padding:30px clamp(18px,4vw,64px) 90px; }
+.catalog-heading { display:flex; align-items:baseline; justify-content:space-between; margin:0 0 34px; }
+.catalog-heading h1 { font-family:Impact,'Arial Narrow',sans-serif; text-transform:uppercase; font-size:clamp(56px,9vw,144px); font-weight:900; line-height:.95; letter-spacing:-.035em; max-width:90%; }
+.catalog-heading>span { font:12px monospace; }
+.catalog-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:30px; row-gap:72px; }
+.catalog-film:first-child,.catalog-film:nth-child(6n+4) { grid-column:1/-1; }
+.catalog-image { display:block; position:relative; width:100%; overflow:hidden; aspect-ratio:16/10; background:#fff; border:1px solid #e6e6e2; text-align:left; }
+.catalog-film:first-child .catalog-image,.catalog-film:nth-child(6n+4) .catalog-image { aspect-ratio:2/1; }
+.catalog-image img { width:100%; height:100%; object-fit:cover; transition:transform .7s cubic-bezier(.2,.7,.2,1); }
+.catalog-image:hover img { transform:scale(1.025); }
+.catalog-play { position:absolute; bottom:18px; right:18px; background:white; color:#151515; width:44px; height:44px; display:grid; place-items:center; font-size:25px; border-radius:50%; transition:background .2s,color .2s; }
+.catalog-image:hover .catalog-play { background:#df3926; color:white; }
+.catalog-caption { display:flex; align-items:baseline; justify-content:space-between; gap:20px; margin-top:16px; }
+.catalog-caption button { text-align:left; }
+.catalog-caption h2 { font-size:clamp(21px,2.7vw,38px); font-weight:700; line-height:1.05; letter-spacing:-.04em; }
+.catalog-caption>span { flex-shrink:0; font:9px monospace; text-transform:uppercase; color:#68685f; }
+.catalog-description { font-size:13px; line-height:1.6; max-width:60ch; margin-top:12px; color:#64645d; white-space:pre-line; }
+.catalog-image-title { display:block; padding:30px; font-size:clamp(26px,4vw,64px); font-weight:bold; letter-spacing:-.04em; }
+.studio-contact { background:#fff; color:#191916; }
+.studio-contact input,.studio-contact textarea { background:#fff; color:#191916; border-color:#bbbcb5; border-radius:0; }
+.studio-contact label,.studio-contact .text-gray-400,.studio-contact .text-gray-300,.studio-contact .text-gray-500 { color:#65665f; }
+.studio-contact footer { border-color:#ddd; }
+.studio-contact main { align-items:flex-start; padding-top:64px; }
+.studio-contact h1 { font-family:Impact,'Arial Narrow',sans-serif; text-transform:uppercase; font-size:clamp(48px,6vw,80px); font-weight:900; }
+@media(max-width:640px) { .studio-navigation { padding-top:22px; }.studio-navigation-top { gap:10px; padding-bottom:16px; }.studio-main-links { gap:14px; font-size:9px; }.studio-categories { column-gap:20px; font-size:9px; }.studio-categories a { min-height:36px; }.studio-content { padding-top:20px; }.catalog-grid { grid-template-columns:1fr; row-gap:40px; }.catalog-film:first-child .catalog-image,.catalog-film:nth-child(6n+4) .catalog-image { aspect-ratio:16/10; }.catalog-caption { flex-direction:column; gap:7px; }.catalog-description { font-size:12px; } }
+@media(prefers-reduced-motion:reduce) { .studio-navigation *, .film-catalog * { transition:none!important; } }
+/* Motion and modal focus retain a quiet visual hierarchy. */
+.studio-portfolio .text-gray-300 { color:#626259; }
+.studio-portfolio .text-gray-400 { color:#707068; }
+.studio-portfolio .bg-\[\#05060A\] .text-gray-300 { color:#d1d5db; }
+.studio-portfolio .bg-\[\#05060A\] .text-gray-400 { color:#9ca3af; }
+/* Reference pass: wood-type branding and image-led film presentation. */
+.studio-wordmark { font-family:Georgia,'Times New Roman',serif; font-weight:900; letter-spacing:-.075em; font-size:clamp(32px,4.7vw,66px); transform:scaleY(1.12); transform-origin:left center; }
+.studio-wordmark span { color:inherit; text-shadow:none; margin-left:.015em; }
+.studio-wordmark:hover { color:#cc2d20; }
+.catalog-heading { margin-bottom:20px; }
+.catalog-heading h1 { font-family:Arial,Helvetica,sans-serif; text-transform:none; font-size:13px; font-weight:400; letter-spacing:.08em; line-height:1.4; }
+.catalog-feature .catalog-image { aspect-ratio:auto!important; height:min(76svh,850px); min-height:420px; }
+.catalog-feature-title { position:absolute; left:2.5%; right:8%; bottom:4%; text-align:left; font:500 clamp(48px,8.4vw,140px)/.92 Arial,Helvetica,sans-serif; letter-spacing:-.065em; color:#fff; text-shadow:0 2px 18px #0008; overflow-wrap:anywhere; }
+.catalog-feature .catalog-caption h2 { font-size:20px; }
+.catalog-feature .catalog-image-title { color:#151515; }
+.catalog-feature .catalog-image:has(.catalog-image-title) .catalog-feature-title { display:none; }
+.catalog-feature .catalog-play { top:20px; bottom:auto; }
+@media(max-width:640px) { .studio-wordmark { font-size:29px; }.studio-main-links { gap:12px; }.catalog-feature .catalog-image { min-height:380px; height:65svh; }.catalog-feature-title { font-size:clamp(43px,12vw,76px); bottom:5%; right:6%; }.catalog-feature .catalog-image img { object-position:center; } }

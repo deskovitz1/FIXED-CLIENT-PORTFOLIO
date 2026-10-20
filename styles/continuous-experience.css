@@ -1,0 +1,115 @@
+/* Native scrolling; the incoming editorial surface covers a stationary stage. */
+html:has(.continuous-experience) { scroll-behavior:smooth; }
+.continuous-experience { --scene-progress:0; background:#fff; color:#171717; }
+.continuous-experience > .studio-navigation { position:sticky; top:0; z-index:40; padding-top:20px; }
+.continuous-experience .studio-navigation-top { padding-bottom:18px; }
+.continuous-experience .studio-wordmark { font-size:clamp(30px,3.5vw,48px); }
+#spinner,#work,#portfolio { scroll-margin-top:155px; }
+.continuous-experience main { position:relative; }
+.spinner-scene { position:relative; z-index:0; }
+.spinner-stage { position:relative; }
+.continuous-experience .carnival-page { min-height:calc(100svh - 150px); overflow:clip; background:#fff; }
+.continuous-experience .sc-page { min-height:calc(100svh - 150px); padding-top:55px; padding-bottom:65px; }
+/* Never transform/filter the wheel, television, or ancestors of their player. */
+.continuous-experience .sc-left,.continuous-experience .sc-right { transform:none; }
+.scene-scroll { display:flex; justify-content:center; align-items:center; width:44px; height:44px; margin:-35px auto 22px; position:relative; z-index:2; font-size:25px; color:#a52a2a; }
+.scene-focus { position:absolute; inset:0; pointer-events:none; opacity:var(--curtain,0); background:radial-gradient(ellipse at center,transparent 42%,#1717170b 100%); backdrop-filter:blur(1.5px); mask-image:radial-gradient(ellipse at center,transparent 38%,#000 100%); }
+.continuous-experience .portfolio-scene { position:relative; z-index:2; background:transparent; padding-top:0; }
+@media(min-width:1000px) and (min-height:700px) and (prefers-reduced-motion:no-preference) {
+ .spinner-scene { position:sticky; top:145px; }
+}
+.continuous-experience .catalog-film { --arrival:1; }
+.continuous-experience .catalog-image { transform:none; }
+.continuous-experience .catalog-image img { transform:none; transition:none; }
+.continuous-experience .catalog-image:hover img { transform:none; }
+.continuous-experience .catalog-feature-title { font-family:Georgia,"Times New Roman",serif; font-weight:400; letter-spacing:-.055em; }
+@media(max-width:999px) { .scene-focus { backdrop-filter:none; } }
+@media(max-width:640px) { #spinner,#work,#portfolio { scroll-margin-top:175px; }.continuous-experience .sc-page { padding-top:32px; padding-bottom:35px; }.continuous-experience .portfolio-scene { padding-top:12px; } }
+@media(prefers-reduced-motion:reduce) {
+ html:has(.continuous-experience) { scroll-behavior:auto; }
+ .scene-focus { display:none; }
+ .continuous-experience .catalog-image { transform:none; }
+}
+
+
+/* One continuous portfolio sheet, never a separate fullscreen project panel. */
+.portfolio-surface { background:var(--archive-paper,#fafaf8); padding-top:12px; }
+@media(min-width:1000px) and (min-height:700px) and (prefers-reduced-motion:no-preference) {
+ .portfolio-surface { transform-origin:50% 0; transform:perspective(1800px) translateZ(calc((1 - var(--advance,0)) * -100px)); border-radius:calc((1 - var(--advance,0)) * 20px) calc((1 - var(--advance,0)) * 20px) 0 0; overflow:clip; }
+ .continuous-experience .catalog-feature .catalog-image { height:58svh; min-height:320px; }
+}
+@media(prefers-reduced-motion:reduce) { .portfolio-surface { transform:none; border-radius:0; } }
+
+.scene-scroll { width:max-content; gap:12px; font:9px/1.4 monospace; letter-spacing:.14em; color:#65655f; opacity:var(--invitation-opacity,1); }
+.scene-scroll span { font-size:16px; }
+.scene-scroll:focus-visible { opacity:1; outline:1px solid currentColor; outline-offset:4px; }
+
+/* Balanced object sizes with a plain white opening stage. */
+.continuous-experience .sc-page { max-width:1000px; gap:60px; padding:28px 24px 48px; }
+.continuous-experience .sc-left { gap:0; }
+.continuous-experience .lever-mount { width:65px; }
+.continuous-experience .lever-arm { width:75px; }
+.continuous-experience .circle-wrapper { width:clamp(300px,28vw,420px)!important; }
+.continuous-experience .crt-screen { width:clamp(280px,26vw,390px); }
+.continuous-experience .sc-right { width:auto; max-width:none; }
+@media(max-width:999px) {
+ .continuous-experience .sc-page { gap:32px; }
+ .continuous-experience .circle-wrapper { width:340px!important; }
+ .continuous-experience .crt-screen { width:320px; }
+}
+@media(max-width:640px) {
+ .continuous-experience .sc-page { padding:24px 14px 40px; }
+ .continuous-experience .circle-wrapper { width:min(70vw,280px)!important; }
+ .continuous-experience .crt-screen { width:min(68vw,270px); }
+}
+.continuous-experience .broadcast-ident { container-type:inline-size; }
+.continuous-experience .ident-wordmark { font-size:19cqw; }
+
+.continuous-experience .spinner-stage { background:#fff; }
+.continuous-experience .spinner-stage .carnival-page { background:#fff; }
+
+/* Phone edition: a direct film portfolio, without the interactive opening stage. */
+@media(max-width:767px) {
+ .continuous-experience .spinner-scene { display:none; }
+ .continuous-experience > .studio-navigation { padding:18px 18px 0; }
+ .continuous-experience .studio-navigation-top { padding-bottom:14px; }
+ .continuous-experience .studio-wordmark { font-size:30px; }
+ .continuous-experience .studio-main-links { gap:18px; }
+ .continuous-experience .studio-categories { flex-wrap:nowrap; overflow-x:auto; gap:22px; padding:4px 0; scrollbar-width:none; }
+ .continuous-experience .studio-categories::-webkit-scrollbar { display:none; }
+ .continuous-experience .studio-categories a { flex-shrink:0; min-height:38px; }
+ .continuous-experience #work,.continuous-experience #portfolio { scroll-margin-top:115px; }
+ .continuous-experience .portfolio-scene,.continuous-experience .portfolio-surface { padding-top:0; }
+ .continuous-experience .film-timeline { display:none; }
+}
+
+/* Explicit apparatus dimensions, enlarged a further 15%, without relying on browser CSS zoom. */
+@media(min-width:768px) {
+ .continuous-experience .sc-page { max-width:1800px; gap:40px; }
+ .continuous-experience .circle-wrapper { width:clamp(448.5px,41.86vw,627.9px)!important; }
+ .continuous-experience .wheel-apparatus { padding:37.375px; }
+ .continuous-experience .wheel-medallion { width:98.67px; height:98.67px; }
+ .continuous-experience .wheel-medallion span { font-size:35.88px; }
+ .continuous-experience .lever-mount { width:97.175px; height:209.3px; }
+ .continuous-experience .lever-arm { width:112.125px; }
+ .continuous-experience .lever-base { width:37.375px; height:119.6px; }
+ .continuous-experience .lever-ball { width:35.88px; height:35.88px; }
+ .continuous-experience .crt-screen { width:clamp(418.6px,38.87vw,583.05px); }
+ .continuous-experience .crt-shell { padding:25.3px 25.3px 22.425px; }
+ .continuous-experience .crt-frame { padding:32.89px 14.95px 17.94px; }
+}
+@media(min-width:768px) and (max-width:1199px) {
+ .continuous-experience .sc-page { flex-direction:column; }
+}
+@media(min-width:768px) and (max-width:999px) {
+ .continuous-experience .circle-wrapper { width:508.3px!important; }
+ .continuous-experience .crt-screen { width:478.4px; }
+}
+
+@media(min-width:768px) { .continuous-experience .sc-left { gap:12px; } }
+/* Preserve side-by-side presentation where the viewport limits the larger objects. */
+@media(min-width:1200px) and (max-width:1599px) {
+ .continuous-experience .sc-page { padding-left:12px; padding-right:12px; gap:24px; }
+ .continuous-experience .circle-wrapper { width:min(41.86vw,calc((100vw - 320px) * .51))!important; }
+ .continuous-experience .crt-screen { width:min(38.87vw,calc((100vw - 320px) * .49)); }
+}

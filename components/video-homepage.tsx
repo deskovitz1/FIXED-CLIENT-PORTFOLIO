@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react"
 import { Video } from "@/lib/db"
+import { SiteNavigation } from "@/components/site-navigation"
+import { ChapterPortfolio } from "@/components/chapter-portfolio"
 import { VideoPlayer } from "@/components/video-player"
 import { Play, AlertCircle, Edit2, Trash2, Save, XCircle, Plus, Upload, Image, ChevronUp, ChevronDown, X, Menu } from "lucide-react"
 import { upload } from '@vercel/blob/client'
@@ -13,6 +15,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 interface VideoHomepageProps {
   initialCategory?: string
+  featuredProjectId?: number
+  embedded?: boolean
 }
 
 interface FeaturedVideoItemProps {
@@ -1052,7 +1056,7 @@ function VideoItem({ video, onChanged, onSelect, videoRefs, observerRef, onVideo
   )
 }
 
-export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
+export function VideoHomepage({ initialCategory, featuredProjectId, embedded = false }: VideoHomepageProps = {}) {
   const { isAdmin } = useAdmin()
   const isMobile = useIsMobile()
   const [videos, setVideos] = useState<Video[]>([])
@@ -1081,6 +1085,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
       setSelectedCategory(initialCategory)
       fetchVideos(initialCategory)
     } else {
+      setSelectedCategory(null)
       fetchVideos()
     }
   }, [initialCategory])
@@ -1528,104 +1533,11 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
 
   // Show video grid directly (skip intro/menu logic)
   return (
-    <div className="min-h-screen text-gray-100 relative bg-[#05060A]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-red-900/60 bg-black/80 backdrop-blur-sm px-4 md:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-14 sm:h-16">
-          <div className="flex items-center gap-3 sm:gap-6">
-            <a
-              href="/"
-              className="text-lg sm:text-xl font-bold text-gray-100 hover:opacity-70 transition-opacity touch-manipulation"
-            >
-              CIRCUS17
-            </a>
-            <nav className="hidden md:flex items-center gap-4">
-              <a
-                href="/videos"
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedCategory === null
-                    ? "bg-red-600 text-white"
-                    : "text-gray-200 hover:bg-white/10"
-                }`}
-              >
-                All
-              </a>
-              <a
-                href="/videos?category=music-video"
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedCategory === "music-video"
-                    ? "bg-red-500 text-white"
-                    : "text-gray-200 hover:bg-white/10"
-                }`}
-              >
-                MUSIC
-              </a>
-              <a
-                href="/videos?category=industry-work"
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedCategory === "industry-work"
-                    ? "bg-red-500 text-white"
-                    : "text-gray-200 hover:bg-white/10"
-                }`}
-              >
-                LAUNCH VIDEOS
-              </a>
-              <a
-                href="/videos?category=clothing"
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedCategory === "clothing"
-                    ? "bg-red-500 text-white"
-                    : "text-gray-200 hover:bg-white/10"
-                }`}
-              >
-                CLOTHING
-              </a>
-              <a
-                href="/videos?category=live-events"
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedCategory === "live-events"
-                    ? "bg-red-500 text-white"
-                    : "text-gray-200 hover:bg-white/10"
-                }`}
-              >
-                LIVE EVENTS
-              </a>
-              <a
-                href="/videos?category=bts"
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedCategory === "bts"
-                    ? "bg-red-500 text-white"
-                    : "text-gray-200 hover:bg-white/10"
-                }`}
-              >
-                BTS
-              </a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Mobile menu button */}
-            <MobileNavMenu selectedCategory={selectedCategory} />
-            
-            {/* Contact button */}
-            <a
-              href="mailto:info@circusseventeen.com"
-              className="hidden sm:inline-flex px-3 sm:px-4 py-2 text-xs sm:text-sm bg-transparent border border-white/30 hover:bg-red-500/90 hover:border-red-500/90 text-white rounded-full transition-colors touch-manipulation min-h-[44px] items-center justify-center"
-            >
-              Contact
-            </a>
-            {isAdmin && (
-              <button
-                onClick={() => setShowAddVideo(true)}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-full transition-all flex items-center gap-1.5 sm:gap-2 touch-manipulation min-h-[44px]"
-              >
-                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Add Video</span>
-                <span className="sm:hidden">Add</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="studio-portfolio">
+      {!embedded && <SiteNavigation category={selectedCategory || ""} actions={isAdmin ? (
+        <button onClick={() => setShowAddVideo(true)} className="text-red-600">Add Video</button>
+      ) : undefined} />}
+      {embedded && isAdmin && <button className="mx-6 mt-4 text-red-600" onClick={() => setShowAddVideo(true)}>Add Video</button>}
 
       {/* Add Video Dialog */}
       {showAddVideo && (
@@ -1805,7 +1717,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-4 sm:py-6">
+      <div className="studio-content">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -1824,8 +1736,10 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
               </p>
             </div>
           </div>
+        ) : !isAdmin ? (
+          <ChapterPortfolio videos={videos} onSelect={handleVideoClick} />
         ) : (
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
+          <div className="bg-[#05060A] text-gray-100 p-4 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Main Video Area (YouTube-style - Larger) */}
             <div className="flex-1 lg:max-w-[65%] w-full">
               {featuredVideo && (
@@ -1888,7 +1802,7 @@ export function VideoHomepage({ initialCategory }: VideoHomepageProps = {}) {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Video Player Modal */}
       {selectedVideo && (

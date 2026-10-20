@@ -1,0 +1,71 @@
+/* Night carnival direction. Scoped to /menu; the portfolio remains white. */
+.carnival-page { --brass:#b99550; --cream:#f5e8c9; --crimson:#811726; background:#100b0c; color:var(--cream); }
+.carnival-environment { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:-1; background:radial-gradient(ellipse at 33% 52%,#92263333,transparent 52%),#100b0c; }
+.tent-canopy { position:absolute; inset:0 0 auto; height:370px; opacity:.45; background:repeating-conic-gradient(from 250deg at 50% -120%,#56121e 0deg 9deg,#170d11 9deg 18deg); mask-image:linear-gradient(#000,transparent); }
+.stage-curtain { position:absolute; top:0; bottom:0; width:clamp(24px,7vw,110px); background:repeating-linear-gradient(90deg,#21080d 0,#701321 24%,#3c0a13 47%,#841b29 65%,#260b12 100%); box-shadow:inset -12px 0 24px #0008,12px 0 40px #0007; opacity:.85; }
+.curtain-left { left:-24px; transform:skewX(-2deg); }.curtain-right { right:-24px; transform:skewX(2deg) scaleX(-1); }
+.stage-floor { position:absolute; bottom:-120px; left:-20%; right:-20%; height:320px; background:repeating-conic-gradient(from 270deg at 50% 0%,#3c1420 0deg 10deg,#150f13 10deg 20deg); transform:perspective(400px) rotateX(35deg); opacity:.45; mask-image:linear-gradient(transparent,#000); }
+.carnival-page .studio-navigation { background:transparent; color:var(--cream); padding:28px clamp(24px,6vw,90px) 0; }
+.carnival-page .studio-wordmark { color:var(--cream); text-shadow:0 2px 0 #9e7435,0 4px 0 #331914; }
+.carnival-page .studio-wordmark:hover { color:#ffd782; }
+.carnival-page .studio-categories { border-color:#bf925936; color:#ddcda9; }
+.carnival-page .studio-navigation a:after { background:#dfb76c; }
+.carnival-page .studio-main-links a:focus-visible,.carnival-page .studio-categories a:focus-visible { outline-color:#ffe0a2; }
+.carnival-page .sc-page { position:relative; max-width:1500px; min-height:calc(100svh - 155px); gap:clamp(45px,6vw,95px); padding:105px clamp(45px,6vw,100px) 95px; align-items:center; }
+.machine-gantry { position:absolute; top:46px; left:8%; right:8%; height:78%; border:12px solid #351119; border-top:18px solid #5d1c29; border-radius:160px 160px 26px 26px; box-shadow:inset 0 0 0 2px #93693b,0 0 0 2px #130a0d,0 0 0 4px #5c3826,0 20px 30px #0009; background:linear-gradient(120deg,#340b1540,transparent 45%,#3b101940); z-index:-1; }
+.gantry-lights { position:absolute; top:-11px; left:8%; right:8%; display:flex; justify-content:space-between; gap:5px; }
+.gantry-lights i { width:5px; height:5px; flex-shrink:0; border-radius:50%; background:#ffc66b; box-shadow:0 0 7px #ee9b3f90; animation:bulb-warmup 1.8s both; }
+.machine-conduit { position:absolute; left:42%; right:20%; top:61%; height:55px; z-index:-1; border:3px solid #7c613d; border-radius:20px; background:repeating-linear-gradient(90deg,#181515 0 5px,#544434 6px 8px); box-shadow:0 10px 14px #000a,inset 0 2px 3px #c0ab7e44; display:flex; align-items:center; justify-content:space-evenly; }
+.machine-conduit i { width:8px; height:8px; border-radius:50%; background:#b38842; border:2px solid #dfbd78; }
+[data-spinning=true] .machine-conduit i { background:#b6dcd4; box-shadow:0 0 13px #88c8b2; transition:background .4s; }
+.carnival-page .sc-left { position:relative; gap:8px; }
+.carnival-page .wheel-apparatus { padding:49px; background:repeating-conic-gradient(#321412 0 2deg,#361916 2deg 4deg); border:5px solid #a17b3f; box-shadow:0 0 0 3px #2d1713,0 0 0 8px #54202a,0 0 0 11px #a17b3f,0 0 0 14px #1c1211,10px 22px 0 #090707,0 28px 48px #000b,inset 0 0 0 3px #d3aa6466,inset 0 0 0 24px #7b1c2b; }
+.carnival-page .circle-wrapper { width:clamp(260px,32vw,470px)!important; border:5px solid #b08e50; box-shadow:0 0 0 4px #291c12,0 0 0 6px #ccaa68,inset 0 0 24px #0009; background:#151010; }
+.carnival-page .circle-slice-image { filter:brightness(.86) saturate(.83); }
+.carnival-page .circle-slice:hover .circle-slice-image,.carnival-page .slice-image--selected { filter:brightness(1.12) saturate(1.1); }
+.carnival-page .orbit-track-outer { inset:-20px; border:1px solid #ad864a77; box-shadow:none; }
+.carnival-page .orbit-track-inner { inset:33px; border:2px solid #cfaa67; }
+.wheel-rivets { position:absolute; inset:-10px; pointer-events:none; }
+.wheel-rivets>i { position:absolute; inset:0; }
+.wheel-rivets>i:after { content:''; position:absolute; left:calc(50% - 3px); width:6px; height:6px; top:0; border-radius:50%; background:linear-gradient(45deg,#5a4028,#d2b67b,#654324); box-shadow:0 1px 2px #000; }
+.wheel-crown { position:absolute; top:-54px; left:calc(50% - 25px); width:50px; color:#ebc57f; text-shadow:0 2px #532b13,0 0 12px #daa45455; font-size:48px; line-height:1; z-index:3; }
+.carnival-page .orbital-lamp { inset:12px; opacity:.75; animation:bulb-warmup 1.8s both; }
+.carnival-page .orbital-lamp i { width:10px; height:10px; left:calc(50% - 5px); border-color:#b48643; background:radial-gradient(circle at 35% 30%,#fff9d9,#ffd57d 35%,#d08634 80%); box-shadow:0 0 8px #f5ad5d88,0 0 19px #eb91472b; }
+.carnival-page .orbital-lamp i:after { content:''; position:absolute; top:18px; left:1px; width:6px; height:6px; border-radius:50%; background:#e8b863; box-shadow:0 0 5px #e6a643aa; }
+.carnival-page[data-spinning=true] .orbital-lamp { animation:none; opacity:.23; transition:opacity .12s; }
+.carnival-page[data-spinning=true] .orbital-lamp[data-lit=true] { opacity:1; }
+.carnival-page[data-spinning=true] .orbital-lamp[data-lit=true] i { background:#fff3c7; box-shadow:0 0 12px #ffc873,0 0 25px #f1a74f66; }
+.carnival-page[data-selected=true][data-spinning=false] .orbital-lamp { animation:selection-warmth 1.3s ease-out both; }
+.carnival-page[data-selected=true][data-spinning=false] .wheel-apparatus { box-shadow:0 0 0 3px #2d1713,0 0 0 8px #54202a,0 0 0 11px #a17b3f,0 0 0 14px #1c1211,10px 22px 0 #090707,0 28px 48px #000b,0 0 70px #ce7f2b25,inset 0 0 0 3px #d3aa6466,inset 0 0 0 24px #7b1c2b; }
+.carnival-page[data-spinning=true] .wheel-apparatus { animation:mechanical-tension .45s ease-out; }
+.carnival-page .wheel-medallion { background:radial-gradient(circle at 35% 25%,#a92c3b,#5e1120 70%); border:6px double #d9b36b; box-shadow:0 6px 14px #0008,inset 0 1px 2px #ffcd9255; width:80px; height:80px; }
+.carnival-page .wheel-medallion span { color:var(--cream); text-shadow:1px 2px #240b0e; font-size:28px; }
+.carnival-page .wheel-pointer { margin-top:-9px; filter:drop-shadow(0 3px 2px #0008); }.carnival-page .wheel-pointer-bottom { border-bottom-color:#f1cf87; }
+.carnival-page .wheel-column h3 { color:#f5e8c9; }.carnival-page .wheel-column p { color:#b8a891; }
+.carnival-page .lever-base { background:linear-gradient(90deg,#322a20,#b89658 45%,#4b3824); border-color:#bda066; box-shadow:5px 7px 10px #0009; }
+.carnival-page .lever-bar { background:linear-gradient(#453321,#e1bd76,#63502f); }.carnival-page .lever-ball { background:radial-gradient(circle at 30% 25%,#ffc29d,#be3240 30%,#5e101c 80%); box-shadow:0 5px 10px #0009; }
+.carnival-page .text-gray-400 { color:#c4ae8b; }
+.carnival-page .sc-right { position:relative; }
+.carnival-page .crt-shell { background:linear-gradient(120deg,#9a2938,#631420 70%); border:2px solid #c09853; padding:27px 23px 22px; border-radius:60px 60px 15px 15px; box-shadow:4px 5px 0 #401019,8px 9px 0 #9b743a,13px 15px 0 #230a10,18px 30px 45px #000b,inset 0 1px 2px #f3b99466; }
+.cabinet-marquee { display:flex; width:100%; justify-content:center; align-items:center; gap:18px; color:#f6db9e; font:900 28px Georgia,serif; letter-spacing:-1px; padding:0 0 19px; text-shadow:0 2px 0 #3c1018; }
+.cabinet-marquee i { width:7px; height:7px; border-radius:50%; background:#fff0b7; box-shadow:0 0 10px #ffd16d; }
+.carnival-page .crt-frame { background:#261b18; border-color:#b89557; border-radius:45% / 7%; box-shadow:inset 0 3px 8px #0009; }
+.carnival-page .crt-frame>div.absolute { background:transparent; }.carnival-page .crt-frame>div.absolute>div { background:#221812; border-color:#765b35; }.carnival-page .crt-frame>div.absolute span { color:#c9ae76; }
+.carnival-page .crt-screen { width:clamp(260px,27vw,380px); background:#110d0b; border-color:#6f5938; box-shadow:0 0 0 2px #1b120d,0 0 0 5px #987b48,inset 0 0 30px #0009!important; }
+.carnival-page .broadcast-ident { background:#0e1718; color:#f4deb1; }.carnival-page .ident-wordmark { text-shadow:1px 0 #d95030,-1px 0 #5bb9cc,0 0 7px #ffe2a32b; }.carnival-page .ident-orbit { border-color:#a9d5c7; }.carnival-page .ident-square { background:#2774b0; }.carnival-page .ident-disc { background:#e4a944; }
+.carnival-page .speaker-grille { background:radial-gradient(circle,#0e0907 1px,transparent 1.6px) 0 0/4px 4px,#b18a4b; box-shadow:inset 0 2px 4px #0005; }
+.carnival-page .receiver-label b { color:#e8cfa0; }
+.carnival-page .tuning-dial { border-color:#a18045; background:linear-gradient(100deg,#e2c184,#7d5c30); box-shadow:2px 4px 4px #0007; }.carnival-page .tuning-dial:after { background:#4d1920; }
+.carnival-page .channel-readout { background:#171613; border:1px solid #947442; padding:10px 8px; border-radius:2px; color:#ecd3a1; font-size:9px; }.carnival-page .channel-readout span:first-child { color:#cfdbb9; }
+.carnival-page .crt-controls button,.carnival-page .crt-controls>div { background:#2a1516; border-color:#b08b4d; box-shadow:0 3px 0 #170b0b,inset 0 1px 2px #ffd9a029; }.carnival-page .crt-controls svg { color:#f3d398; }.carnival-page .crt-controls button:hover { background:#8b2734; border-color:#f0c879; }
+.carnival-page .signal-change { animation:cabinet-signal .45s ease-out; }
+.carnival-page[data-spinning=true] .crt-screen { filter:saturate(.6); transition:filter .6s; }
+.carnival-page[data-selected=true][data-spinning=false] .cabinet-marquee i { animation:selection-warmth 1.3s ease-out both; }
+@keyframes bulb-warmup { from { opacity:.08; } to { opacity:.8; } }
+@keyframes selection-warmth { 0% { opacity:.35; } 30% { opacity:1; } 100% { opacity:.85; } }
+@keyframes mechanical-tension { 0%,100% { transform:translateY(0); } 30% { transform:translateY(1px) rotate(.15deg); } 60% { transform:translateY(-1px) rotate(-.1deg); } }
+@keyframes cabinet-signal { from { opacity:.5; filter:brightness(1.3) saturate(.4); transform:scaleY(.98); } to { opacity:1; filter:none; transform:none; } }
+@media(min-width:1000px) and (max-width:1400px) { .carnival-page .sc-page { gap:40px; padding-left:45px; padding-right:45px; }.carnival-page .circle-wrapper { width:29vw!important; }.carnival-page .crt-screen { width:26vw; }.carnival-page .wheel-apparatus { padding:43px; }.carnival-page .lever-mount { width:65px; }.carnival-page .lever-arm { width:80px; } }
+@media(max-width:999px) { .carnival-page .sc-page { flex-direction:column; padding:100px 55px 80px; gap:80px; }.carnival-page .circle-wrapper { width:min(53vw,420px)!important; }.carnival-page .crt-screen { width:min(62vw,410px); }.machine-gantry { left:9%; right:9%; height:88%; border-radius:130px 130px 20px 20px; }.machine-conduit { left:49%; right:auto; width:40px; height:65%; top:20%; flex-direction:column; }.carnival-page .sc-right { width:auto; }.stage-curtain { width:45px; } }
+@media(max-width:640px) { .carnival-page .studio-navigation { padding:24px 22px 0; }.carnival-page .sc-page { padding:85px 23px 65px; gap:50px; }.machine-gantry { left:15px; right:15px; top:38px; height:91%; border-width:6px; border-top-width:14px; border-radius:120px 120px 16px 16px; }.gantry-lights { left:20%; right:20%; gap:3px; }.gantry-lights i { width:3px; height:3px; }.gantry-lights i:nth-child(even) { display:none; }.carnival-page .circle-wrapper { width:60vw!important; }.carnival-page .wheel-apparatus { padding:31px; border-width:3px; box-shadow:0 0 0 3px #2d1713,0 0 0 6px #a17b3f,5px 12px 0 #090707,0 20px 30px #0008,inset 0 0 0 17px #7b1c2b; }.carnival-page .orbit-track-inner { inset:23px; }.carnival-page .orbital-lamp { inset:8px; }.carnival-page .orbital-lamp i { width:6px; height:6px; left:calc(50% - 3px); }.carnival-page .orbital-lamp i:after { width:3px; height:3px; top:12px; }.wheel-crown { top:-42px; font-size:36px; left:calc(50% - 18px); width:36px; }.carnival-page .orbit-track-outer { inset:-12px; }.carnival-page .wheel-medallion { width:61px; height:61px; border-width:4px; }.carnival-page .wheel-medallion span { font-size:23px; }.carnival-page .crt-shell { padding:22px 16px 18px; max-width:100%; }.carnival-page .crt-screen { width:100%; }.carnival-page .sc-right { width:100%; }.cabinet-marquee { font-size:25px; }.stage-curtain { width:30px; }.carnival-page .sc-left { gap:14px; }.carnival-page .lever-base { height:65px; }.carnival-page .wheel-column h3 { max-width:75vw; }.carnival-page .receiver-label b { font-size:10px; } }
+@media(prefers-reduced-motion:reduce) { .carnival-page .wheel-apparatus,.carnival-page .orbital-lamp,.carnival-page .gantry-lights i,.carnival-page .cabinet-marquee i,.carnival-page .signal-change { animation:none!important; }.carnival-page .orbital-lamp { opacity:.8!important; }.carnival-page .crt-screen { transition:none; } }

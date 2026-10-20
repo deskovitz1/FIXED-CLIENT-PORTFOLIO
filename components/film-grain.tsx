@@ -1,11 +1,14 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
 
 export function FilmGrain() {
+  const pathname = usePathname()
   const grainRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (pathname !== "/") return
     let animationFrame: number
     let offset = 0
 
@@ -24,7 +27,9 @@ export function FilmGrain() {
         cancelAnimationFrame(animationFrame)
       }
     }
-  }, [])
+  }, [pathname])
+
+  if (pathname !== "/") return null
 
   return (
     <>

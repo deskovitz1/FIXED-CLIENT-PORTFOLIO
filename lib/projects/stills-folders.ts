@@ -1,0 +1,22 @@
+export const STILLS_FOLDERS: Record<number, string> = {
+  "43": "neogenesis",
+  "42": "second-sight-ventures-42",
+  "41": "circus-video",
+  "27": "determinant-materials-27",
+  "21": "september-november-official-music-video-21",
+  "39": "you-turned-39",
+  "23": "zoltux-23",
+  "40": "discipulus-ventures-40",
+  "26": "plan-for-one-official-video-26",
+  "11": "helvet-winter-campaign-11",
+  "24": "patrick-finnegan-24",
+  "28": "ordinary-practice-28",
+  "30": "ken-carson-live-at-yale-30",
+  "25": "ddd-official-video-25",
+  "19": "zoltux-bts-19",
+  "29": "lost-together-festival-29",
+  "15": "andre-lawrence-album-trailer-15",
+  "1": "basic-space-test-1",
+  "32": "bktherula-live-nostrings-32",
+  "31": "slim-jxmmi-live-31"
+}

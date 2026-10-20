@@ -1,0 +1,69 @@
+/* Editorial studio direction, built on the original white object layout. */
+.carnival-page { background:#fff; color:#191919; }
+.carnival-page .studio-navigation { background:#fff; color:#191919; }
+.carnival-page .sc-page { max-width:1500px; min-height:calc(100svh - 165px); gap:clamp(50px,7vw,115px); padding:70px clamp(24px,4vw,64px) 90px; }
+.carnival-page .sc-left { gap:10px; }
+.carnival-page .wheel-apparatus { padding:25px; border:1px solid #a8a9a3; background:#f4f3ef; box-shadow:0 0 0 3px #fff,0 0 0 4px #d7d7d1,0 14px 22px #14181212; }
+.carnival-page .circle-wrapper { border:2px solid #b6b8b0; box-shadow:0 0 0 3px #fff,0 0 0 4px #b9bab2; width:clamp(260px,32vw,460px)!important; }
+.carnival-page .orbit-track-outer { inset:-8px; border:1px solid #d3d3cc; border-top:2px solid #b52929; border-bottom:none; }
+.carnival-page .orbit-track-inner { inset:18px; border:1px solid #c9c9c0; }
+.carnival-page .orbital-lamp { inset:8px; opacity:.5; animation:none; }
+.carnival-page .orbital-lamp i,.carnival-page .orbital-lamp:nth-child(3n) i { width:5px; height:5px; left:calc(50% - 2.5px); background:#edcf8c; border:1px solid #b5a47e; box-shadow:0 0 3px #d0a45a55; }
+.carnival-page[data-spinning=true] .orbital-lamp { opacity:.25; }
+.carnival-page[data-spinning=true] .orbital-lamp[data-lit=true] { opacity:1; }
+.carnival-page[data-spinning=true] .orbital-lamp[data-lit=true] i { background:#ffe6ad; box-shadow:0 0 6px #e7b254aa; }
+.carnival-page[data-selected=true][data-spinning=false] .wheel-apparatus { box-shadow:0 0 0 3px #fff,0 0 0 4px #d7d7d1,0 14px 22px #14181212; }
+.carnival-page .wheel-medallion { width:66px; height:66px; border:3px double #a4a69c; background:#f6f4ee; box-shadow:0 3px 7px #0002; }
+.carnival-page .wheel-medallion span { color:#a82928; font:900 24px Georgia,serif; }
+.carnival-page .wheel-pointer { transform-origin:50% 90%; margin-top:3px; filter:drop-shadow(0 2px 1px #0002); }
+.carnival-page .wheel-pointer-bottom { border-left-width:9px; border-right-width:9px; border-bottom-width:17px; border-bottom-color:#ac2d2c; }
+.carnival-page .lever-base { border-radius:4px; width:25px; background:linear-gradient(90deg,#8a8e87,#e0e2da 45%,#8b8e88); box-shadow:3px 5px 7px #0002; border-color:#9d9f97; }
+.carnival-page .lever-ball { width:24px; height:24px; background:radial-gradient(circle at 35% 25%,#e69082,#b93231 40%,#641c20); box-shadow:0 3px 6px #0003; }
+.carnival-page .wheel-column h3 { font-size:16px; font-weight:500; color:#20211e; }
+.carnival-page .wheel-column p { font-size:12px; color:#707168; }
+/* Compact editing monitor: a graphite shell, recessed glass and utility controls. */
+.carnival-page .crt-shell { background:#343733; border:1px solid #22251f; border-radius:8px; padding:17px 17px 15px; gap:0; box-shadow:3px 4px 0 #1b1e19,6px 7px 0 #62665d,10px 20px 27px #14181222,inset 0 1px 0 #ffffff20; }
+.carnival-page .crt-shell:before { opacity:.17; }
+.carnival-page .crt-frame { background:#22251f; border:1px solid #51554c; border-radius:7px; padding:22px 10px 12px; box-shadow:inset 0 2px 4px #0005; }
+.carnival-page .crt-frame>div.absolute { background:transparent; }
+.carnival-page .crt-frame>div.absolute>div { background:none; border:0; padding:0; }
+.carnival-page .crt-frame>div.absolute span { color:#d9dcd0; font:8px monospace; letter-spacing:2px; }
+.carnival-page .crt-screen { width:clamp(250px,27vw,380px); background:#111714; border:5px solid #151a14; border-radius:40% / 5%; box-shadow:0 0 0 1px #595d53,inset 0 0 20px #0008!important; }
+.carnival-page .broadcast-ident { background:#14211e; color:#e9e8d6; }
+.carnival-page .ident-wordmark { color:#e9e8d6; text-shadow:1px 0 #99774e,-1px 0 #588c87; }
+.carnival-page .ident-optic { opacity:.85; }
+.carnival-page .ident-orbit { border-color:#94aca0; }
+.carnival-page .receiver-console { padding:17px 1px; gap:12px; }
+.carnival-page .speaker-grille { background:repeating-linear-gradient(0deg,#171c16 0 2px,#53594d 2px 3px); width:24%; height:28px; border-radius:0; }
+.carnival-page .receiver-label b { color:#d4d8cb; font:7px monospace; letter-spacing:1px; }
+.carnival-page .tuning-dial { width:36px; height:36px; min-width:44px; min-height:44px; border:5px ridge #6d7367; background:linear-gradient(100deg,#5b6256,#30372c); box-shadow:2px 3px 3px #0005; }
+.carnival-page .tuning-dial:after { background:#e6e9dd; left:15px; }
+.carnival-page .channel-readout { border-color:#676d5f; color:#dadfce; font-size:8px; padding-top:12px; }
+.carnival-page .channel-readout span:first-child { color:#b6cbb4; }
+.carnival-page .crt-controls { justify-content:flex-end; margin-top:12px; gap:8px; }
+.carnival-page .crt-controls button,.carnival-page .crt-controls>div { width:44px; height:44px; border-radius:3px; background:#242b21; border:1px solid #6b7362; box-shadow:0 2px 0 #141a12; }
+.carnival-page .crt-controls svg { color:#e0e6d6; }
+.carnival-page .crt-controls button:hover { border-color:#c5cdbb; background:#424a3c; transform:none; }
+.carnival-page .crt-controls button:focus-visible,.carnival-page .tuning-dial:focus-visible { outline:2px solid #e7e8d2; outline-offset:3px; }
+.carnival-page .signal-change { animation:monitor-resolve .28s ease-out; }
+@keyframes monitor-resolve { from { opacity:.65; filter:saturate(.35) contrast(1.2); transform:translateY(1px); } to { opacity:1; filter:none; transform:none; } }
+@media(min-width:1000px) and (max-width:1400px) { .carnival-page .sc-page { gap:50px; padding-left:30px; padding-right:30px; }.carnival-page .circle-wrapper { width:31vw!important; }.carnival-page .crt-screen { width:27vw; }.carnival-page .lever-mount { width:70px; }.carnival-page .lever-arm { width:85px; } }
+@media(max-width:999px) { .carnival-page .sc-page { padding:50px 28px 75px; gap:48px; }.carnival-page .circle-wrapper { width:min(56vw,440px)!important; }.carnival-page .crt-screen { width:min(66vw,400px); } }
+@media(max-width:640px) { .carnival-page .sc-page { padding:30px 23px 60px; gap:35px; }.carnival-page .circle-wrapper { width:65vw!important; }.carnival-page .wheel-apparatus { padding:22px; }.carnival-page .orbit-track-inner { inset:16px; }.carnival-page .orbital-lamp { inset:7px; }.carnival-page .orbital-lamp i { width:4px; height:4px; }.carnival-page .wheel-medallion { width:54px; height:54px; }.carnival-page .wheel-medallion span { font-size:21px; }.carnival-page .crt-screen { width:100%; }.carnival-page .crt-shell { padding:13px; }.carnival-page .sc-left { gap:12px; } }
+@media(prefers-reduced-motion:reduce) { .carnival-page .signal-change { animation:none; }.carnival-page .orbital-lamp { opacity:.65!important; transition:none; } }
+
+/* Larger physical objects, sized in layout so controls stay aligned. */
+@media(min-width:1000px) {
+ .carnival-page .sc-page { max-width:1700px; gap:clamp(28px,4vw,70px); padding-left:32px; padding-right:32px; }
+ .carnival-page .circle-wrapper { width:clamp(330px,35vw,550px)!important; }
+ .carnival-page .crt-screen { width:clamp(300px,32vw,490px); }
+}
+@media(min-width:641px) and (max-width:999px) {
+ .carnival-page .circle-wrapper { width:min(66vw,510px)!important; }
+ .carnival-page .crt-screen { width:min(74vw,490px); }
+}
+@media(max-width:640px) {
+ .carnival-page .circle-wrapper { width:70vw!important; }
+ .carnival-page .wheel-apparatus { padding:18px; }
+ .carnival-page .sc-right { width:100%; max-width:440px; }
+}

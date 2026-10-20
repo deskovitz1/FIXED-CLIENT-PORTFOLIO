@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { createPortal } from "react-dom"
+import { useEffect, useRef, useState } from "react"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Video } from "@/lib/db"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -19,7 +20,7 @@ interface VideoPlayerProps {
   onPrevVideo?: () => void
 }
 
-export function VideoPlayer({ 
+function VideoPlayerContent({
   video, 
   videoUrl, 
   title, 
@@ -31,6 +32,30 @@ export function VideoPlayer({
   onPrevVideo
 }: VideoPlayerProps) {
   const isMobile = useIsMobile()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!isOpen) return
+    const previousFocus = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+      if (event.key === "Tab") {
+        const controls = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), iframe')
+        if (!controls?.length) return
+        const first = controls[0], last = controls[controls.length - 1]
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+      }
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener("keydown", handleKey)
+      previousFocus?.focus()
+    }
+  }, [isOpen, onClose])
   
   // Get Vimeo ID - Vimeo only playback
   const vimeoId = video?.vimeo_id || null
@@ -55,12 +80,13 @@ export function VideoPlayer({
   // If video has Vimeo ID, use Vimeo Player
   if (vimeoId) {
     return (
-      <div 
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title || video?.title || "Video player"}
         className="fixed inset-0 z-50 bg-black flex items-center justify-center"
       >
         {/* Navigation Arrows */}
         {canGoPrev && (
           <button
+            aria-label="Previous video"
             onClick={onPrevVideo}
             className={`absolute ${isMobile ? 'left-2' : 'left-4'} z-40 p-3 bg-black/60 hover:bg-black/80 active:bg-black/90 rounded-full text-white transition-all touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center`}
           >
@@ -70,6 +96,7 @@ export function VideoPlayer({
         
         {canGoNext && (
           <button
+            aria-label="Next video"
             onClick={onNextVideo}
             className={`absolute ${isMobile ? 'right-2' : 'right-4'} z-40 p-3 bg-black/60 hover:bg-black/80 active:bg-black/90 rounded-full text-white transition-all touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center`}
           >
@@ -80,6 +107,7 @@ export function VideoPlayer({
         <div className={`relative ${isMobile ? 'w-full h-full' : 'w-[90vw] max-w-[1400px] h-[85vh] max-h-[800px]'} bg-black flex flex-col ${isMobile ? '' : 'rounded-lg'} overflow-hidden`}>
           {/* Close Button */}
           <button
+            aria-label="Close video"
             onClick={onClose}
             className={`absolute ${isMobile ? 'top-3 right-3' : 'top-4 right-4'} z-50 p-2.5 text-white hover:bg-white/10 active:bg-white/20 rounded-full transition-all min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation`}
           >
@@ -115,9 +143,10 @@ export function VideoPlayer({
   // No Vimeo ID - show error message
   if (!vimeoId) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Video player" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95">
         <div className="relative w-[95vw] h-[95vh] max-w-none bg-black flex items-center justify-center">
           <button
+            aria-label="Close video"
             onClick={onClose}
             className="absolute top-4 right-4 z-50 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
           >
@@ -143,4 +172,10 @@ export function VideoPlayer({
     )
   }
 
+}
+
+export function VideoPlayer(props: VideoPlayerProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  return mounted ? createPortal(<VideoPlayerContent {...props} />, document.body) : null
 }
