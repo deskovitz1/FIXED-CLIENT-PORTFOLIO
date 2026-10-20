@@ -1,13 +1,13 @@
 "use client"
 
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useLayoutEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useIsMobile } from "@/hooks/use-mobile"
 // Intro video URLs are configured in app/config/intro.ts
 import { SPLASH_VIDEO_URL } from "@/app/config/intro"
 
 export default function IntroLanding() {
-  const isMobile = useIsMobile()
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
+  useLayoutEffect(() => { setIsMobile(matchMedia("(max-width: 767px)").matches) }, [])
   const splashVideoRef = useRef<HTMLVideoElement | null>(null)
   const hasNavigatedRef = useRef(false)
   const router = useRouter()
@@ -21,12 +21,12 @@ export default function IntroLanding() {
 
   // Prepare the existing destination while the tent animation plays.
   useEffect(() => {
-    if (!isMobile) router.prefetch("/menu")
+    if (isMobile === false) router.prefetch("/menu")
   }, [isMobile, router])
 
   useEffect(() => {
     const video = splashVideoRef.current
-    if (!video || isMobile) return
+    if (!video || isMobile !== false) return
 
     // Set playback speed to 1.25x (25% faster)
     video.playbackRate = 1.25
@@ -81,6 +81,9 @@ export default function IntroLanding() {
       }
     }
   }, [isMobile, router])
+
+  // Do not request the desktop splash video before the viewport is known.
+  if (isMobile === null) return <div className="min-h-screen bg-white" />
 
   // Mobile: Don't render anything, redirect happens in useEffect above
   if (isMobile) {

@@ -5,7 +5,7 @@ import { PostcardVideo } from "@/components/postcard-video"
 import { createPortal } from "react-dom"
 import "@/styles/photo-lightbox.css"
 
-type Photo = { src: string; alt: string; kind?: "image" | "video" }
+type Photo = { src: string; previewSrc?: string; mobileSrc?: string; alt: string; kind?: "image" | "video" }
 export function PhotoLightbox({ photos, initialIndex, title, onClose }: { photos: Photo[]; initialIndex: number; title: string; onClose: () => void }) {
   const [index, setIndex] = useState(initialIndex)
   const dialog = useRef<HTMLDivElement>(null)
@@ -45,10 +45,10 @@ export function PhotoLightbox({ photos, initialIndex, title, onClose }: { photos
         wheel.current = {total:0,last:now}
       }
     }} onTouchStart={e => {start.current = e.touches[0].clientX}} onTouchEnd={e => {if (start.current !== null && Math.abs(e.changedTouches[0].clientX - start.current) > 50) move(e.changedTouches[0].clientX < start.current ? 1 : -1); start.current = null}}>
-      {photos[index].kind === "video" ? <PostcardVideo key={photos[index].src} src={photos[index].src} label={photos[index].alt} controls /> : <img src={photos[index].src} alt={photos[index].alt} />}
+      {photos[index].kind === "video" ? <PostcardVideo key={photos[index].src} src={photos[index].src} mobileSrc={photos[index].previewSrc} label={photos[index].alt} controls /> : <picture>{photos[index].previewSrc && <source media="(max-width: 767px)" srcSet={photos[index].previewSrc} />}<img src={photos[index].src} alt={photos[index].alt} /></picture>}
       <button className="photo-previous" onClick={() => move(-1)} aria-label="Previous photo">←</button>
       <button className="photo-next" onClick={() => move(1)} aria-label="Next photo">→</button>
     </div>
-    <nav className="photo-lightbox-strip" aria-label="Gallery images">{photos.map((photo,i) => <button key={`${photo.src}-${i}`} aria-label={`View photo ${i + 1}`} aria-current={index === i ? "true" : undefined} onClick={() => setIndex(i)}>{photo.kind === "video" ? <span className="postcard-thumbnail">▶<small>POSTCARD</small></span> : <img src={photo.src} alt="" loading="lazy" />}</button>)}</nav>
+    <nav className="photo-lightbox-strip" aria-label="Gallery images">{photos.map((photo,i) => <button key={`${photo.src}-${i}`} aria-label={`View photo ${i + 1}`} aria-current={index === i ? "true" : undefined} onClick={() => setIndex(i)}>{photo.kind === "video" ? <span className="postcard-thumbnail">▶<small>POSTCARD</small></span> : <img src={photo.mobileSrc || photo.previewSrc || photo.src} alt="" loading="lazy" />}</button>)}</nav>
   </div>, document.body)
 }

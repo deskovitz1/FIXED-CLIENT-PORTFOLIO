@@ -4,7 +4,8 @@
 .photo-lightbox button { background:transparent; color:inherit; border:0; cursor:pointer; }
 .photo-lightbox header button { min-height:44px; padding:8px; font:inherit; letter-spacing:inherit; }
 .photo-lightbox-stage { position:relative; min-height:0; display:flex; align-items:center; justify-content:center; }
-.photo-lightbox-stage > img { width:100%; height:100%; object-fit:contain; }
+.photo-lightbox-stage > picture { display:block; width:100%; height:100%; }
+.photo-lightbox-stage > picture > img,.photo-lightbox-stage > img { width:100%; height:100%; object-fit:contain; }
 .photo-lightbox-stage > button { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:48px; font-size:24px; background:#10100fb3; }
 .photo-previous { left:0; }.photo-next { right:0; }
 .photo-lightbox-strip { display:flex; gap:8px; overflow-x:auto; margin:auto; max-width:100%; padding:4px; }

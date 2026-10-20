@@ -3,8 +3,13 @@ import { useState } from "react"
 import type { Video } from "@/lib/db"
 import { getVideoThumbnail } from "@/lib/utils"
 import { VimeoPlayer } from "@/components/VimeoPlayer"
+import posterPreviews from "@/lib/projects/poster-previews.json"
+
+const posters: Record<string, { mobileSrc: string; previewSrc: string }> = posterPreviews
 
 export function FilmScreen({ video, eager }: { video: Video; eager: boolean }) {
+  const thumbnail = getVideoThumbnail(video)
+  const poster = thumbnail ? posters[thumbnail] : undefined
   const [playing, setPlaying] = useState(false)
   const words = video.title.split(" ")
   let lines = [video.title]
@@ -18,7 +23,7 @@ export function FilmScreen({ video, eager }: { video: Video; eager: boolean }) {
   return <div className={`film-screen${playing ? " film-screen-playing" : ""}`}>
     {playing ? video.vimeo_id ? <VimeoPlayer videoId={video.vimeo_id} hash={video.vimeo_hash} autoplay muted={false} loop={false} title={false} byline={false} portrait={false} className="film-screen-player" /> : <video src={video.video_url || video.blob_url} controls autoPlay playsInline /> :
       <button className="film-screen-poster" onClick={() => setPlaying(true)} aria-label={`Play ${video.title}`}>
-        {getVideoThumbnail(video) && <img src={getVideoThumbnail(video)!} alt="" loading={eager ? "eager" : "lazy"} decoding="async" />}
+        {thumbnail && <picture>{poster && <source media="(max-width: 767px)" srcSet={poster.mobileSrc} />}<img src={poster?.previewSrc || thumbnail} alt="" loading={eager ? "eager" : "lazy"} decoding="async" /></picture>}
         <span className="film-screen-title">{lines.map(line => <span key={line}>{line}</span>)}</span>
         <span className="film-screen-play" aria-hidden="true">WATCH FILM <span>↗</span></span>
       </button>}

@@ -1,19 +1,30 @@
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import { STILLS_FOLDERS } from "./stills-folders"
+import mediaPreviews from "./media-previews.json"
+
+const previews: Record<string, { previewSrc?: string; mobileSrc?: string }> = mediaPreviews
 
 async function readImages(slug: string, folder = "") {
   const relative = `projects/${slug}/stills${folder ? `/${folder}` : ""}`
   const directory = path.join(process.cwd(), "public", relative)
   let names: string[] = []
   try { names = await readdir(directory) } catch { return [] }
-  let gridNames: string[] = []
-  if (slug === "neogenesis") {
-    try { gridNames = await readdir(path.join(process.cwd(), "public/projects", slug, "grid")) } catch {}
-  }
   let crops: Record<string,string> = {}
   try { crops = JSON.parse(await readFile(path.join(directory,"crops.json"),"utf8")) } catch {}
-  return names.filter(name => (folder === "postcards" ? /\.(mp4|webm|m4v)$/i : /\.(jpe?g|png|webp|avif)$/i).test(name)).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).map((name,index)=>({kind:folder === "postcards" ? "video" : "image",src:`/${relative}/${encodeURIComponent(name)}`,previewSrc:gridNames.includes(folder === "postcards" ? name : `${name}.jpg`) ? `/projects/${slug}/grid/${encodeURIComponent(name)}${folder === "postcards" ? "" : ".jpg"}` : undefined,alt:`${slug.replace(/-/g," ")} film still ${index+1}`,width:1600,height:900,focalPoint:typeof crops[name]==="string" ? crops[name] : "50% 50%"}))
+  return names
+    .filter(name => (folder === "postcards" ? /\.(mp4|webm|m4v)$/i : /\.(jpe?g|png|webp|avif)$/i).test(name))
+    .sort((a,b) => a.localeCompare(b,undefined,{numeric:true}))
+    .map((name,index) => {
+      const src = `/${relative}/${encodeURIComponent(name)}`
+      return {
+        kind: folder === "postcards" ? "video" : "image", src,
+        ...previews[src],
+        alt: `${slug.replace(/-/g," ")} film still ${index+1}`,
+        width:1600, height:900,
+        focalPoint: typeof crops[name] === "string" ? crops[name] : "50% 50%",
+      }
+    })
 }
 
 export async function readProjectStills() {

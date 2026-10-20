@@ -3,7 +3,7 @@ import { getVideoThumbnail } from "@/lib/utils"
 import { FEATURED_PROJECTS } from "./featured"
 
 export type EditorialImage = {
-  src: string; previewSrc?: string; alt: string; caption?: string; width: number; height: number
+  src: string; previewSrc?: string; mobileSrc?: string; alt: string; caption?: string; width: number; height: number
   composition: "landscape" | "left" | "right" | "spread" | "archive"
   kind?: "image" | "video"
   motion?: boolean

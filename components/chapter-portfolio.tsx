@@ -17,7 +17,8 @@ const VIDEO_ONLY_PROJECTS = new Set([40, 30, 19, 29, 15, 1, 32, 31])
 
 export function ChapterPortfolio({ videos, onSelect }: { videos: Video[]; onSelect: (video: Video) => void }) {
   const [stills, setStills] = useState<Record<string, {preview: (EditorialImage & {focalPoint?:string})[]; gallery: EditorialImage[]; postcards?: EditorialImage[]}>>({})
-  useEffect(() => { const controller = new AbortController(); fetch("/api/project-stills", {signal:controller.signal}).then(r=>r.ok?r.json():{}).then(setStills).catch(()=>{}); return ()=>controller.abort() }, [])
+  useEffect(() => { const controller = new AbortController(); fetch("/api/project-stills", {signal:controller.signal}).then(r=>r.ok?r.json():{}).then(data => { setStills(data); setStillsLoaded(true) }).catch(()=>{}); return ()=>controller.abort() }, [])
+  const [stillsLoaded, setStillsLoaded] = useState(false)
   const [viewer, setViewer] = useState<{photos: EditorialImage[]; index: number; title: string} | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const chapters = useMemo(() => [...videos].sort((a,b) => {
@@ -84,9 +85,9 @@ export function ChapterPortfolio({ videos, onSelect }: { videos: Video[]; onSele
             <span className="film-feature-heading">FEATURED ON FRAME SET</span>
             <span className="film-feature-action">CHECK IT OUT <span aria-hidden="true">↗</span></span>
           </a>}
-          {!VIDEO_ONLY_PROJECTS.has(video.id) && gallery.some(Boolean) && <section className="film-stills" aria-label={`${video.title} stills`}>
-            {gallery.map((image,i)=>image ? <figure key={`${image.src}-${i}`} style={{gridArea:`${Math.floor(i / 3) + 1} / ${i % 3 + 1}`}}>
-              <button className="photo-open" aria-label={`View ${video.title} photo ${i + 1}`} onClick={() => setViewer({photos:fullPhotos, index:Math.max(0,fullPhotos.findIndex(photo => filename(photo.src) === filename(image.src))), title:video.title})}>{image.kind === "video" ? <PostcardVideo src={image.previewSrc || image.src} label={image.alt} /> : <img src={image.previewSrc || image.src} alt={image.alt} width={image.width} height={image.height} loading={index === 0 ? "eager" : "lazy"} decoding="async" style={{objectPosition:(image as EditorialImage & {focalPoint?:string}).focalPoint || "50% 50%"}} />}</button>
+          {!VIDEO_ONLY_PROJECTS.has(video.id) && (!stillsLoaded || gallery.some(Boolean)) && <section className="film-stills" aria-label={`${video.title} stills`}>
+            {stillsLoaded && gallery.map((image,i)=>image ? <figure key={`${image.src}-${i}`} style={{gridArea:`${Math.floor(i / 3) + 1} / ${i % 3 + 1}`}}>
+              <button className="photo-open" aria-label={`View ${video.title} photo ${i + 1}`} onClick={() => setViewer({photos:fullPhotos, index:Math.max(0,fullPhotos.findIndex(photo => filename(photo.src) === filename(image.src))), title:video.title})}>{image.kind === "video" ? <PostcardVideo src={image.previewSrc || image.src} mobileSrc={image.mobileSrc} label={image.alt} /> : <img src={image.previewSrc || image.src} srcSet={image.mobileSrc ? `${image.mobileSrc} 480w, ${image.previewSrc || image.src} 1280w` : undefined} sizes="33vw" alt={image.alt} width={image.width} height={image.height} loading={index === 0 ? "eager" : "lazy"} decoding="async" style={{objectPosition:(image as EditorialImage & {focalPoint?:string}).focalPoint || "50% 50%"}} />}</button>
               {image.temporary && <figcaption>Temporary film image</figcaption>}
             </figure> : null)}
           </section>}

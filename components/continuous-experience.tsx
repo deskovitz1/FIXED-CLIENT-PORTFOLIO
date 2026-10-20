@@ -14,7 +14,7 @@ import "@/styles/continuous-experience.css"
 
 export function ContinuousExperience({ initialSection = "spinner" }: { initialSection?: "spinner" | "work" }) {
   const [phone, setPhone] = useState<boolean | null>(null)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const query = matchMedia("(max-width: 767px)")
     const update = () => setPhone(query.matches)
     update()
@@ -64,7 +64,8 @@ export function ContinuousExperience({ initialSection = "spinner" }: { initialSe
 
   useLayoutEffect(() => {
     if (initialized.current || phone === null) return
-    const target = window.location.hash.slice(1) || (category ? "portfolio" : initialSection)
+    const reload = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type === "reload"
+    const target = reload && !phone ? "spinner" : window.location.hash.slice(1) || (category ? "portfolio" : initialSection)
     if ((target === "work" || target === "portfolio") && !phone && videos.length === 0) return
     initialized.current = true
     if (target === "spinner" && !phone) {
@@ -88,7 +89,7 @@ export function ContinuousExperience({ initialSection = "spinner" }: { initialSe
       <main>
         {phone !== true && <div id="spinner" className="spinner-scene">
           <div className="spinner-stage">
-            <SpinnerExperience onVideosLoaded={setVideos} />
+            {phone === false && <SpinnerExperience onVideosLoaded={setVideos} />}
             <div className="scene-focus" aria-hidden="true" />
             <a href="#work" className="scene-scroll" aria-label="Scroll to explore the films">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a>
           </div>

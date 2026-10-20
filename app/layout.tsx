@@ -32,6 +32,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          if (matchMedia('(min-width: 768px)').matches &&
+              ['/', '/menu', '/videos'].includes(location.pathname) &&
+              performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+            history.scrollRestoration = 'manual';
+            if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+            scrollTo(0, 0);
+          }
+        ` }} />
+      </head>
       <body className={`font-sans antialiased`}>
         <AdminProvider>
           <AdminShortcutListener />

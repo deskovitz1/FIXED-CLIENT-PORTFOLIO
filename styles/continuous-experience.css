@@ -125,3 +125,5 @@ html:has(.continuous-experience) { scroll-behavior:smooth; }
  .continuous-experience .crt-shell { padding:clamp(12px,1.6vw,25.3px); }
  .continuous-experience .crt-frame { padding:22px 10px 12px; }
 }
+
+@media(min-width:768px) { .continuous-experience .spinner-stage { min-height:calc(100svh - 150px); } }
