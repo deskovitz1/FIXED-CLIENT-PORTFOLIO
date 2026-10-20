@@ -51,7 +51,7 @@ export default function IntroLanding() {
       if (hasNavigatedRef.current) return
       hasNavigatedRef.current = true
       video.pause()
-      router.replace("/menu")
+      router.replace("/menu", { scroll: false })
     }
 
     // Preserve the tent animation's existing endpoint (2.5 seconds before file end).

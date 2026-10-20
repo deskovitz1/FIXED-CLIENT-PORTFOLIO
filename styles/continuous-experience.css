@@ -113,3 +113,15 @@ html:has(.continuous-experience) { scroll-behavior:smooth; }
  .continuous-experience .circle-wrapper { width:min(41.86vw,calc((100vw - 320px) * .51))!important; }
  .continuous-experience .crt-screen { width:min(38.87vw,calc((100vw - 320px) * .49)); }
 }
+
+/* Fit both physical objects into the opening viewport, including short laptops. */
+@media(min-width:768px) {
+ .continuous-experience .sc-page { flex-direction:row; min-height:calc(100svh - 150px); gap:clamp(16px,2vw,40px); padding:20px 20px 46px; }
+ .continuous-experience .circle-wrapper { width:min(38vw,627.9px,max(180px,calc(100svh - 330px)))!important; }
+ .continuous-experience .crt-screen { width:min(34vw,583.05px,max(180px,calc((100svh - 460px) * 1.3333))); }
+ .continuous-experience .wheel-apparatus { padding:clamp(18px,2.5vw,37.375px); }
+ .continuous-experience .lever-mount { width:clamp(50px,6vw,97.175px); }
+ .continuous-experience .lever-arm { width:clamp(60px,7vw,112.125px); }
+ .continuous-experience .crt-shell { padding:clamp(12px,1.6vw,25.3px); }
+ .continuous-experience .crt-frame { padding:22px 10px 12px; }
+}

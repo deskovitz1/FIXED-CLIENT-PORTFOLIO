@@ -1010,6 +1010,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/DSCF7415.JPEG",
+        "previewSrc": "/projects/neogenesis/grid/DSCF7415.JPEG.jpg",
         "alt": "neogenesis film still 1",
         "width": 1600,
         "height": 900,
@@ -1018,6 +1019,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/DSCF7514.JPEG",
+        "previewSrc": "/projects/neogenesis/grid/DSCF7514.JPEG.jpg",
         "alt": "neogenesis film still 2",
         "width": 1600,
         "height": 900,
@@ -1026,6 +1028,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/Screenshot%202026-10-19%20at%207.56.28%E2%80%AFPM.png",
+        "previewSrc": "/projects/neogenesis/grid/Screenshot%202026-10-19%20at%207.56.28%E2%80%AFPM.png.jpg",
         "alt": "neogenesis film still 3",
         "width": 1600,
         "height": 900,
@@ -1034,6 +1037,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/Screenshot%202026-10-19%20at%207.56.42%E2%80%AFPM.png",
+        "previewSrc": "/projects/neogenesis/grid/Screenshot%202026-10-19%20at%207.56.42%E2%80%AFPM.png.jpg",
         "alt": "neogenesis film still 4",
         "width": 1600,
         "height": 900,
@@ -1044,6 +1048,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/DSCF7415.JPEG",
+        "previewSrc": "/projects/neogenesis/grid/DSCF7415.JPEG.jpg",
         "alt": "neogenesis film still 1",
         "width": 1600,
         "height": 900,
@@ -1052,6 +1057,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/DSCF7514.JPEG",
+        "previewSrc": "/projects/neogenesis/grid/DSCF7514.JPEG.jpg",
         "alt": "neogenesis film still 2",
         "width": 1600,
         "height": 900,
@@ -1060,6 +1066,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/Screenshot%202026-10-19%20at%207.56.28%E2%80%AFPM.png",
+        "previewSrc": "/projects/neogenesis/grid/Screenshot%202026-10-19%20at%207.56.28%E2%80%AFPM.png.jpg",
         "alt": "neogenesis film still 3",
         "width": 1600,
         "height": 900,
@@ -1068,6 +1075,7 @@
       {
         "kind": "image",
         "src": "/projects/neogenesis/stills/Screenshot%202026-10-19%20at%207.56.42%E2%80%AFPM.png",
+        "previewSrc": "/projects/neogenesis/grid/Screenshot%202026-10-19%20at%207.56.42%E2%80%AFPM.png.jpg",
         "alt": "neogenesis film still 4",
         "width": 1600,
         "height": 900,
@@ -1078,6 +1086,7 @@
       {
         "kind": "video",
         "src": "/projects/neogenesis/stills/postcards/ACGT.mp4",
+        "previewSrc": "/projects/neogenesis/grid/ACGT.mp4",
         "alt": "neogenesis film still 1",
         "width": 1600,
         "height": 900,
@@ -1086,6 +1095,7 @@
       {
         "kind": "video",
         "src": "/projects/neogenesis/stills/postcards/BOARD.mp4",
+        "previewSrc": "/projects/neogenesis/grid/BOARD.mp4",
         "alt": "neogenesis film still 2",
         "width": 1600,
         "height": 900,
@@ -1094,6 +1104,7 @@
       {
         "kind": "video",
         "src": "/projects/neogenesis/stills/postcards/LAB.mp4",
+        "previewSrc": "/projects/neogenesis/grid/LAB.mp4",
         "alt": "neogenesis film still 3",
         "width": 1600,
         "height": 900,
@@ -1102,6 +1113,7 @@
       {
         "kind": "video",
         "src": "/projects/neogenesis/stills/postcards/MITOSIS.mp4",
+        "previewSrc": "/projects/neogenesis/grid/MITOSIS.mp4",
         "alt": "neogenesis film still 4",
         "width": 1600,
         "height": 900,
@@ -1110,6 +1122,7 @@
       {
         "kind": "video",
         "src": "/projects/neogenesis/stills/postcards/PIN%20DROP.mp4",
+        "previewSrc": "/projects/neogenesis/grid/PIN%20DROP.mp4",
         "alt": "neogenesis film still 5",
         "width": 1600,
         "height": 900,

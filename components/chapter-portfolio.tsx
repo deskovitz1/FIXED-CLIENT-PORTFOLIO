@@ -86,7 +86,7 @@ export function ChapterPortfolio({ videos, onSelect }: { videos: Video[]; onSele
           </a>}
           {!VIDEO_ONLY_PROJECTS.has(video.id) && gallery.some(Boolean) && <section className="film-stills" aria-label={`${video.title} stills`}>
             {gallery.map((image,i)=>image ? <figure key={`${image.src}-${i}`} style={{gridArea:`${Math.floor(i / 3) + 1} / ${i % 3 + 1}`}}>
-              <button className="photo-open" aria-label={`View ${video.title} photo ${i + 1}`} onClick={() => setViewer({photos:fullPhotos, index:Math.max(0,fullPhotos.findIndex(photo => filename(photo.src) === filename(image.src))), title:video.title})}>{image.kind === "video" ? <PostcardVideo src={image.src} label={image.alt} /> : <img src={image.src} alt={image.alt} width={image.width} height={image.height} loading="lazy" decoding="async" style={{objectPosition:(image as EditorialImage & {focalPoint?:string}).focalPoint || "50% 50%"}} />}</button>
+              <button className="photo-open" aria-label={`View ${video.title} photo ${i + 1}`} onClick={() => setViewer({photos:fullPhotos, index:Math.max(0,fullPhotos.findIndex(photo => filename(photo.src) === filename(image.src))), title:video.title})}>{image.kind === "video" ? <PostcardVideo src={image.previewSrc || image.src} label={image.alt} /> : <img src={image.previewSrc || image.src} alt={image.alt} width={image.width} height={image.height} loading={index === 0 ? "eager" : "lazy"} decoding="async" style={{objectPosition:(image as EditorialImage & {focalPoint?:string}).focalPoint || "50% 50%"}} />}</button>
               {image.temporary && <figcaption>Temporary film image</figcaption>}
             </figure> : null)}
           </section>}

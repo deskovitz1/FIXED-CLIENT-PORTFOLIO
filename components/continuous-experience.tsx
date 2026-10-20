@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { SpinnerExperience } from "@/components/spinner-experience"
 import { VideoHomepage } from "@/components/video-homepage"
@@ -62,12 +62,14 @@ export function ContinuousExperience({ initialSection = "spinner" }: { initialSe
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (initialized.current || phone === null) return
     const target = window.location.hash.slice(1) || (category ? "portfolio" : initialSection)
     if ((target === "work" || target === "portfolio") && !phone && videos.length === 0) return
     initialized.current = true
-    if (target === "work" || target === "portfolio") {
+    if (target === "spinner" && !phone) {
+      window.scrollTo({ top: 0, behavior: "instant" })
+    } else if (target === "work" || target === "portfolio") {
       document.getElementById(target)?.scrollIntoView({ behavior: "instant", block: "start" })
     }
   }, [initialSection, category, videos.length, phone])
