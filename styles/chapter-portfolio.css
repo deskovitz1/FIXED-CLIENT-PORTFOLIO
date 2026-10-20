@@ -87,7 +87,7 @@
  .continuous-experience .film-screen.film-screen-playing { aspect-ratio:16 / 9; }
  .continuous-experience .film-screen-poster { position:absolute; inset:0; }
  .continuous-experience .film-screen-title { font-size:clamp(20px,5vw,30px); left:5%; bottom:7%; right:10%; }
- .continuous-experience .film-screen-play { font-size:9px; padding:8px 10px; gap:12px; }
+ .continuous-experience .film-screen-play { display:none; }
  .continuous-experience .film-stills { height:auto; aspect-ratio:3 / 2; gap:4px; padding:4px; }
  .continuous-experience #film-11 .film-stills { height:auto; aspect-ratio:9 / 4; }
  .continuous-experience .film-chapter { margin-bottom:24px; scroll-margin-top:115px; }
